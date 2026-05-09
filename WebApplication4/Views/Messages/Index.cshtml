@@ -1,0 +1,214 @@
+﻿@model List<WebApplication4.Controllers.MessageThreadViewModel>
+@{
+    ViewData["Title"] = "Сообщения";
+    var searchQuery = Context.Request.Query["search"].ToString();
+}
+<div class="messages-layout">
+    <div class="chat-list-sidebar">
+        <div style="padding: 12px 16px; border-bottom: 1px solid var(--border);">
+            <form method="get" asp-action="Index" style="position: relative;">
+                <i class="bi bi-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #999; font-size: 18px;"></i>
+                <input type="text" name="search" class="form-control" placeholder="Поиск" value="@searchQuery"
+                       style="padding-left: 48px; padding-right: 40px; border-radius: 20px; border: 1px solid var(--border); background: #f5f5f5; font-size: 15px;" />
+                @if (!string.IsNullOrEmpty(searchQuery))
+                {
+                    <a asp-action="Index" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #999;">
+                        <i class="bi bi-x-circle" style="font-size: 20px;"></i>
+                    </a>
+                }
+            </form>
+        </div>
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-thin alert-info" style="margin: 8px 12px; padding: 8px 12px; border-radius: 8px; font-size: 13px; background: #e3f2fd; color: #1976d2; border: none;">
+                <i class="bi bi-info-circle me-2"></i>@TempData["Error"]
+            </div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-thin alert-success" style="margin: 8px 12px; padding: 8px 12px; border-radius: 8px; font-size: 13px; background: #e1ff8c; color: #111; border: none;">
+                <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            </div>
+        }
+        <div class="chat-list">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5" style="color: #999;">
+                    <i class="bi bi-chat-square-dots d-block mb-3" style="font-size: 48px; opacity: 0.5;"></i>
+                    <p class="mb-0">@(string.IsNullOrEmpty(searchQuery) ? "Нет диалогов" : "Ничего не найдено")</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var thread in Model)
+                {
+                    var isActive = ViewBag.SelectedChatId != null && ViewBag.SelectedChatId.ToString() == thread.Id.ToString();
+                    <a asp-action="Chat" asp-route-id="@thread.Id" asp-route-search="@searchQuery" asp-route-isGroup="@(thread.Type == "group")"
+                       class="chat-item d-flex align-items-center p-3 text-decoration-none @(isActive ? "active" : "")">
+                        <div style="position: relative; margin-right: 12px; flex-shrink: 0;">
+                            @if (thread.Type == "group")
+                            {
+                                <!-- 🔹 ГРУППА: белый фон + лимонная обводка + первая буква названия -->
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                     style="width: 48px; height: 48px; border: 2px solid var(--accent); color: #111; font-size: 18px;">
+                                    @(thread.GroupName?.Substring(0, 1).ToUpper() ?? "G")
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(thread.OtherUser?.ProfilePhotoUrl))
+                            {
+                                <!-- 🔹 ПОЛЬЗОВАТЕЛЬ С ФОТО: лимонная обводка -->
+                                <img src="@thread.OtherUser.ProfilePhotoUrl" class="rounded-circle"
+                                     style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--accent);">
+                            }
+                            else
+                            {
+                                <!-- 🔹 ПОЛЬЗОВАТЕЛЬ БЕЗ ФОТО: белый фон + лимонная обводка + первая буква -->
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                     style="width: 48px; height: 48px; border: 2px solid var(--accent); color: #111; font-size: 18px;">
+                                    @(thread.OtherUser?.DisplayName?.Substring(0, 1).ToUpper() ?? "?")
+                                </div>
+                            }
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <h6 class="mb-0 fw-bold" style="font-size: 15px; color: #212121; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    @(thread.Type == "group" ? thread.GroupName : thread.OtherUser?.DisplayName)
+                                </h6>
+                                <small style="color: #999; font-size: 12px;">
+                                    @(thread.LastMessageAt?.ToString("HH:mm"))
+                                </small>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <small class="text-muted text-truncate" style="max-width: 200px; font-size: 13px;">
+                                    @(thread.LastMessageText?.Length > 40 ? thread.LastMessageText.Substring(0, 40) + "..." : thread.LastMessageText ?? "Нет сообщений")
+                                </small>
+                                @if (thread.UnreadCount > 0)
+                                {
+                                    <span class="badge rounded-pill" style="background: #667eea; color: #fff; font-size: 12px; padding: 2px 8px; min-width: 20px;">
+                                        @thread.UnreadCount
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+    <div class="chat-main">
+        <div class="empty-chat" style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <i class="bi bi-chat-square-text d-block mb-3" style="font-size: 64px; color: #ccc; opacity: 0.5;"></i>
+            <p class="text-muted">Выберите диалог из списка слева</p>
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-bold">Удалить чат?</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm" asp-action="DeleteChat" method="post">
+                    <input type="hidden" name="id" id="deleteChatId" />
+                    <input type="hidden" name="isGroup" id="deleteIsGroup" value="false" />
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="deleteForBoth" name="deleteForBoth" value="true">
+                        <label class="form-check-label text-danger" for="deleteForBoth">Удалить также у собеседника</label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createGroupModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Новая группа</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CreateGroup" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Название</label>
+                        <input type="text" name="name" class="form-control" placeholder="Введите название группы" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Участники (Username)</label>
+                        <textarea name="memberUsernames" class="form-control" rows="4" placeholder="username1, username2..."></textarea>
+                        <small class="text-muted">Укажите username через запятую</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Передача параметров в модальное окно удаления
+    document.getElementById('deleteModal').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var chatId = button.getAttribute('data-id');
+        var isGroup = button.getAttribute('data-isgroup') === 'true';
+        document.getElementById('deleteChatId').value = chatId;
+        document.getElementById('deleteIsGroup').value = isGroup ? 'true' : 'false';
+    });
+</script>
+
+<style>
+    .chat-item {
+        transition: background 0.2s;
+        border-bottom: 1px solid var(--border-light) !important;
+    }
+
+        .chat-item:hover {
+            background: var(--bg-secondary) !important;
+        }
+
+        .chat-item.active {
+            background: #e3f2fd !important;
+        }
+
+    .chat-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-list::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    .alert-thin {
+        font-weight: 400;
+        border-left: 3px solid currentColor;
+    }
+
+    .empty-chat {
+        background: #f8f9fa;
+        height: 100%;
+    }
+
+    @@media (max-width: 768px) {
+        .chat-list-sidebar {
+            width: 100% !important;
+            border-right: none !important;
+        }
+
+        .chat-main {
+            display: none !important;
+        }
+    }
+</style>

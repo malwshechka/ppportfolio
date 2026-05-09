@@ -1,0 +1,55 @@
+﻿@model List<WebApplication4.Controllers.SubscriptionViewModel>
+@{
+    ViewData["Title"] = "Мои подписки";
+}
+<div class="container-fluid py-5 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Мои подписки</h1>
+            <p class="text-muted mb-0">Разработчики, на которых вы подписаны</p>
+        </div>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-person-x fs-1 text-muted mb-3"></i>
+                <h5 class="mb-2">Вы ни на кого не подписаны</h5>
+                <p class="text-muted">Подписывайтесь на разработчиков, чтобы видеть их новые проекты в ленте.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="list-group shadow-sm rounded-3">
+            @foreach (var sub in Model)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        @if (!string.IsNullOrEmpty(sub.ProfilePhotoUrl))
+                        {
+                            <img src="@sub.ProfilePhotoUrl" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+                        }
+                        else
+                        {
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                                @(sub.DisplayName.Substring(0, 1).ToUpper())
+                            </div>
+                        }
+                        <div>
+                            <h6 class="mb-1">@sub.DisplayName</h6>
+                            <small class="text-muted">Подписка с @sub.SubscribedAt.ToString("dd.MM.yyyy")</small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@sub.UserId" class="btn btn-sm btn-outline-primary">Профиль</a>
+                        <form asp-controller="Profile" asp-action="ToggleSubscription" method="post">
+                            <input type="hidden" name="userId" value="@sub.UserId" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Отписаться</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

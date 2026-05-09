@@ -1,0 +1,229 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using WebApplication4.Models
+@inject UserManager<ApplicationUser> UserManager
+@model WebApplication4.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Профиль";
+    var user = await UserManager.GetUserAsync(User);
+}
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card text-center p-4 border-0 shadow-sm">
+                <div class="position-relative d-inline-block mx-auto mb-3">
+                    <div style="width: 110px; height: 110px; border-radius: 50%; overflow: hidden; border: 4px solid var(--hero-bg); background: #fff;">
+                        @if (!string.IsNullOrEmpty(Model.ProfilePhotoUrl))
+                        {
+                            <img src="@Model.ProfilePhotoUrl" alt="Profile photo" style="width:100%; height:100%; object-fit:cover;">
+                        }
+                        else
+                        {
+                            <div class="bg-secondary text-secondary d-flex align-items-center justify-content-center fw-bold h-100" style="font-size: 2.5rem;">
+                                @Model.DisplayName?.Substring(0, 1).ToUpper()
+                            </div>
+                        }
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1">@Model.DisplayName</h3>
+                <p class="text-muted mb-3 small">@Model.Email</p>
+                @if (!string.IsNullOrEmpty(Model.Bio))
+                {
+                    <div class="text-start bg-light p-3 rounded mb-3 small text-secondary">
+                        @Model.Bio
+                    </div>
+                }
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    @if (!string.IsNullOrEmpty(Model.GitHubUrl))
+                    {
+                        <a href="@Model.GitHubUrl" target="_blank" class="btn btn-sm btn-outline-secondary rounded-circle p-2"><i class="bi bi-github"></i></a>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.LinkedInUrl))
+                    {
+                        <a href="@Model.LinkedInUrl" target="_blank" class="btn btn-sm btn-outline-secondary rounded-circle p-2"><i class="bi bi-linkedin"></i></a>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.TelegramUrl))
+                    {
+                        <a href="@Model.TelegramUrl" target="_blank" class="btn btn-sm btn-outline-secondary rounded-circle p-2"><i class="bi bi-telegram"></i></a>
+                    }
+                </div>
+                <div class="col-12 mt-4">
+                    <hr class="my-3">
+                    <h6 class="fw-bold mb-3">Настройки приватности</h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="allowMessages" asp-for="AllowPrivateMessages" checked="@(Model.AllowPrivateMessages)">
+                        <label class="form-check-label" for="allowMessages">
+                            <strong>Разрешить личные сообщения</strong>
+                            <small class="d-block text-muted">Если отключить, другие пользователи не смогут писать вам личные сообщения</small>
+                        </label>
+                    </div>
+                </div>
+                <hr class="text-muted opacity-25">
+                <div class="text-start">
+                    <div class="mb-2 small text-muted"><i class="bi bi-calendar-event me-2"></i>Регистрация: <span class="text-dark">@Model.RegisteredAt?.ToString("dd.MM.yyyy")</span></div>
+                    <div class="small text-muted"><i class="bi bi-shield-check me-2"></i>Статус: <span class="text-success fw-medium">Активен</span></div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="list-group list-group-flush">
+                    <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action py-3">
+                        <i class="bi bi-house-door me-2 text-muted"></i>Главная
+                    </a>
+                    <a asp-controller="Profile" asp-action="MyProjects" class="list-group-item list-group-item-action py-3">
+                        <i class="bi bi-folder me-2 text-muted"></i>Мои проекты
+                    </a>
+                    <a asp-controller="Favorites" asp-action="Index" class="list-group-item list-group-item-action py-3">
+                        <i class="bi bi-heart me-2 text-danger"></i>Избранное
+                    </a>
+                    <a asp-controller="Profile" asp-action="Subscriptions" class="list-group-item list-group-item-action py-3">
+                        <i class="bi bi-people me-2 text-muted"></i>Подписки
+                    </a>
+                    <a asp-controller="Profile" asp-action="BlockedUsers" class="list-group-item list-group-item-action py-3">
+                        <i class="bi bi-slash-circle me-2 text-muted"></i>Черный список
+                    </a>
+                    <a asp-controller="Profile" asp-action="ChangePassword" class="list-group-item list-group-item-action">
+                        <i class="bi bi-key me-2 text-muted"></i>Сменить пароль
+                    </a>
+                    @if (!User.IsInRole("Admin"))
+                    {
+                        <button type="button" class="list-group-item list-group-item-action py-3 text-danger" data-bs-toggle="modal" data-bs-target="#deleteProfileModal">
+                            <i class="bi bi-trash me-2"></i>Удалить профиль
+                        </button>
+                    }
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="list-group-item py-3">
+                        <button type="submit" class="btn btn-link text-danger text-decoration-none p-0 fw-medium">
+                            <i class="bi bi-box-arrow-left me-2"></i>Выйти
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="row g-4 mb-4">
+                <div class="col-4">
+                    <div class="stat-card h-100 py-4">
+                        <h2 class="mb-1 fw-bold" style="color: var(--accent);">@Model.ProjectsCount</h2>
+                        <p class="mb-0 small text-uppercase fw-bold text-muted">Проекты</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card h-100 py-4">
+                        <h2 class="mb-1 fw-bold" style="color: var(--success-text);">@Model.ReviewsCount</h2>
+                        <p class="mb-0 small text-uppercase fw-bold text-muted">Отзывы</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card h-100 py-4">
+                        <h2 class="mb-1 fw-bold" style="color: #B54708;">@Model.AverageRating.ToString("F1")</h2>
+                        <p class="mb-0 small text-uppercase fw-bold text-muted">Рейтинг</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-pencil-square me-2 text-muted"></i>
+                        Редактировать профиль
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-lemon alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="DisplayName" class="form-label fw-medium small text-muted">Отображаемое имя</label>
+                                <input asp-for="DisplayName" class="form-control form-control-lg bg-light border-0" />
+                                <span asp-validation-for="DisplayName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium small text-muted">Email (нельзя изменить)</label>
+                                <input class="form-control form-control-lg bg-light border-0" value="@Model.Email" disabled />
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Bio" class="form-label fw-medium small text-muted">О себе</label>
+                                <textarea asp-for="Bio" class="form-control bg-light border-0" rows="3"></textarea>
+                                <span asp-validation-for="Bio" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Skills" class="form-label fw-medium small text-muted">Навыки (через запятую)</label>
+                                <input asp-for="Skills" class="form-control form-control-lg bg-light border-0" placeholder="C#, ASP.NET, SQL..." />
+                                <span asp-validation-for="Skills" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-medium small text-muted mt-3">Социальные сети</label>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 border-start-0 border-0"><i class="bi bi-github"></i></span>
+                                    <input asp-for="GitHubUrl" class="form-control bg-light border-0 border-start border-end" placeholder="GitHub URL" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 border-start-0 border-0"><i class="bi bi-linkedin"></i></span>
+                                    <input asp-for="LinkedInUrl" class="form-control bg-light border-0 border-start border-end" placeholder="LinkedIn URL" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 border-start-0 border-0"><i class="bi bi-telegram"></i></span>
+                                    <input asp-for="TelegramUrl" class="form-control bg-light border-0 border-start border-end" placeholder="Telegram URL" />
+                                </div>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <label class="form-label fw-medium small text-muted">Фото профиля</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="file" name="ProfilePhoto" class="form-control bg-light border-0" accept="image/*" />
+                                    @if (!string.IsNullOrEmpty(Model.ProfilePhotoUrl))
+                                    {
+                                        <div class="rounded-circle overflow-hidden" style="width: 50px; height: 50px;">
+                                            <img src="@Model.ProfilePhotoUrl" alt="Current photo" style="width:100%; height:100%; object-fit:cover;">
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-primary px-4 py-2">
+                                <i class="bi bi-save me-1"></i>Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Удалить профиль?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Это действие необратимо. Все ваши проекты, отзывы, сообщения и данные будут безвозвратно удалены.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+                <form asp-action="DeleteProfile" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger btn-sm px-4" onclick="return confirm('Вы уверены? Это действие нельзя отменить.')">
+                        Удалить профиль
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

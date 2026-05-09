@@ -1,0 +1,125 @@
+﻿@model List<WebApplication4.Models.Project>
+@{
+    ViewData["Title"] = "Мои проекты";
+}
+<div class="container-fluid py-5 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Мои проекты</h1>
+            <p class="text-muted mb-0">Управляйте вашими работами и портфолио</p>
+        </div>
+        @if (!User.IsInRole("Admin"))
+        {
+            <a asp-action="CreateProject" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Добавить проект
+            </a>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-lemon shadow-sm alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-folder-plus d-block mb-3" style="font-size: 48px; opacity: 0.5;"></i>
+                <h5 class="mb-2">У вас пока нет проектов</h5>
+                <p class="text-muted mb-4">Создайте первый проект, чтобы начать строить своё портфолио</p>
+                <a asp-action="CreateProject" class="btn btn-primary">
+                    Создать проект
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var project in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="project-card h-100 d-flex flex-column">
+                        <div class="card-body flex-grow-1">
+                            <h5 class="card-title mb-2">@project.Title</h5>
+                            <p class="card-text text-secondary small mb-3">
+                                @(project.Description?.Length > 100
+                                                        ? project.Description.Substring(0, 100) + "..."
+                                                        : project.Description ?? "Нет описания")
+                    </p>
+
+                            <!-- Теги -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-secondary">@project.AppType?.Name</span>
+                                <span class="badge bg-secondary">@project.Status?.Name</span>
+                                <span class="badge bg-secondary">@project.ComplexityLevel?.Name</span>
+                            </div>
+
+                            <div class="tech-tags mb-3">
+                        @if (project.ProjectTechnologies != null)
+                                {
+                                    foreach (var pt in project.ProjectTechnologies.Take(3))
+                                    {
+                                        <span class="tech-tag">@pt.Technology?.Name</span>
+                                    }
+                                }
+                            </div>
+
+                            <!-- Нижняя панель карточки -->
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-subtle small">
+                                <span class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    @project.CreatedAt.ToString("dd.MM.yyyy")
+                                </span>
+                                @{
+                                    // Логика статусов модерации
+                                    var statusClass = project.ModerationStatus switch
+                                    {
+                                        WebApplication4.Models.ModerationStatus.Pending => "warning",
+                                        WebApplication4.Models.ModerationStatus.Approved => "success",
+                                        WebApplication4.Models.ModerationStatus.Rejected => "danger",
+                                        _ => "secondary"
+                                    };
+                                    var statusText = project.ModerationStatus switch
+                                    {
+                                        WebApplication4.Models.ModerationStatus.Pending => "На модерации",
+                                        WebApplication4.Models.ModerationStatus.Approved => "Опубликовано",
+                                        WebApplication4.Models.ModerationStatus.Rejected => "Отклонено",
+                                        _ => "Неизвестно"
+                                    };
+
+                                    // Стили для бейджей
+                                    var badgeStyle = statusClass switch
+                                    {
+                                        "warning" => "background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;",
+                                        "success" => "background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0;",
+                                        "danger" => "background: #FEF2F2; color: #B42318; border: 1px solid #FECACA;",
+                                        _ => "background: #F9FAFB; color: #4B5563; border: 1px solid #E5E7EB;"
+                                    };
+                                }
+                                <span class="badge border-0" style="@badgeStyle">@statusText</span>
+                            </div>
+                        </div>
+
+                        <div class="card-footer d-flex gap-2">
+                            <a asp-action="EditProject" asp-route-id="@project.Id" class="btn btn-outline-secondary flex-grow-1 btn-sm">
+                                <i class="bi bi-pencil me-1"></i>Редактировать
+                            </a>
+                            <form asp-action="DeleteProject" asp-route-id="@project.Id" method="post"
+                                  class="flex-grow-1" onsubmit="return confirm('Удалить проект @project.Title?');">
+                                <button type="submit" class="btn btn-outline-danger w-100 btn-sm">
+                                    <i class="bi bi-trash me-1"></i>Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

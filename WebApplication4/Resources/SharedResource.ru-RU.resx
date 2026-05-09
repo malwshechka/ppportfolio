@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="0" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+
+	<data name="Home" xml:space="preserve">
+    <value>Главная</value>
+  </data>
+	<data name="MyProjects" xml:space="preserve">
+    <value>Мои проекты</value>
+  </data>
+	<data name="Profile" xml:space="preserve">
+    <value>Профиль</value>
+  </data>
+	<data name="AdminPanel" xml:space="preserve">
+    <value>Панель админа</value>
+  </data>
+	<data name="Moderation" xml:space="preserve">
+    <value>Модерация</value>
+  </data>
+	<data name="Login" xml:space="preserve">
+    <value>Войти</value>
+  </data>
+	<data name="Register" xml:space="preserve">
+    <value>Регистрация</value>
+  </data>
+	<data name="Logout" xml:space="preserve">
+    <value>Выйти</value>
+  </data>
+	<data name="FooterDesc" xml:space="preserve">
+    <value>Профессиональное сообщество для разработчиков</value>
+  </data>
+	<data name="Projects" xml:space="preserve">
+    <value>Проекты</value>
+  </data>
+	<data name="Privacy" xml:space="preserve">
+    <value>Конфиденциальность</value>
+  </data>
+	<data name="AllRights" xml:space="preserve">
+    <value>Все права защищены.</value>
+  </data>
+	<data name="Users" xml:space="preserve">
+    <value>Пользователи</value>
+  </data>
+	<data name="ManageAccess" xml:space="preserve">
+    <value>Управление аккаунтами и доступом</value>
+  </data>
+	<data name="Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+	<data name="User" xml:space="preserve">
+    <value>Пользователь</value>
+  </data>
+	<data name="Registered" xml:space="preserve">
+    <value>Регистрация</value>
+  </data>
+	<data name="Status" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+	<data name="Actions" xml:space="preserve">
+    <value>Действия</value>
+  </data>
+	<data name="Admin" xml:space="preserve">
+    <value>Админ</value>
+  </data>
+	<data name="Blocked" xml:space="preserve">
+    <value>Заблокирован</value>
+  </data>
+	<data name="Active" xml:space="preserve">
+    <value>Активен</value>
+  </data>
+	<data name="ConfirmUnblock" xml:space="preserve">
+    <value>Разблокировать пользователя</value>
+  </data>
+	<data name="Unblock" xml:space="preserve">
+    <value>Разблок.</value>
+  </data>
+	<data name="ConfirmBlock" xml:space="preserve">
+    <value>Заблокировать пользователя</value>
+  </data>
+	<data name="Block" xml:space="preserve">
+    <value>Заблок.</value>
+  </data>
+	<data name="ManagePortfolio" xml:space="preserve">
+    <value>Управление вашими работами и портфолио</value>
+  </data>
+	<data name="AddProject" xml:space="preserve">
+    <value>Добавить проект</value>
+  </data>
+	<data name="NoProjects" xml:space="preserve">
+    <value>У вас пока нет проектов</value>
+  </data>
+	<data name="CreateFirst" xml:space="preserve">
+    <value>Создайте первый проект, чтобы начать строить своё портфолио</value>
+  </data>
+	<data name="CreateProject" xml:space="preserve">
+    <value>Создать проект</value>
+  </data>
+	<data name="NoDescription" xml:space="preserve">
+    <value>Нет описания</value>
+  </data>
+	<data name="Pending" xml:space="preserve">
+    <value>На модерации</value>
+  </data>
+	<data name="Published" xml:space="preserve">
+    <value>Опубликовано</value>
+  </data>
+	<data name="Rejected" xml:space="preserve">
+    <value>Отклонено</value>
+  </data>
+	<data name="Unknown" xml:space="preserve">
+    <value>Неизвестно</value>
+  </data>
+	<data name="Edit" xml:space="preserve">
+    <value>Редактировать</value>
+  </data>
+	<data name="Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+	<data name="ConfirmDelete" xml:space="preserve">
+    <value>Удалить проект</value>
+  </data>
+	<data name="Reviews" xml:space="preserve">
+    <value>Отзывов</value>
+  </data>
+	<data name="AvgRating" xml:space="preserve">
+    <value>Средний рейтинг</value>
+  </data>
+	<data name="EditProfile" xml:space="preserve">
+    <value>Редактировать профиль</value>
+  </data>
+	<data name="DisplayName" xml:space="preserve">
+    <value>Отображаемое имя</value>
+  </data>
+	<data name="About" xml:space="preserve">
+    <value>О себе</value>
+  </data>
+	<data name="Skills" xml:space="preserve">
+    <value>Навыки</value>
+  </data>
+	<data name="ProfilePhoto" xml:space="preserve">
+    <value>Фото профиля</value>
+  </data>
+	<data name="CurrentPhoto" xml:space="preserve">
+    <value>Текущее фото</value>
+  </data>
+	<data name="SaveChanges" xml:space="preserve">
+    <value>Сохранить изменения</value>
+  </data>
+	<data name="Navigation" xml:space="preserve">
+    <value>Навигация</value>
+  </data>
+	<data name="ChangePassword" xml:space="preserve">
+    <value>Сменить пароль</value>
+  </data>
+	<data name="Info" xml:space="preserve">
+    <value>Информация</value>
+  </data>
+</root>

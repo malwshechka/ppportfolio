@@ -1,0 +1,299 @@
+﻿@model WebApplication4.Models.Project
+@{
+    ViewData["Title"] = Model?.Title ?? "Просмотр проекта";
+    var fromAdmin = Context.Request.Query["fromAdmin"].ToString() == "true";
+    var currentUserId = User.Identity?.IsAuthenticated == true
+        ? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        : null;
+}
+<div class="container-fluid py-5 px-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Верхняя панель -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    @if (fromAdmin)
+                    {
+                        <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                    }
+                </div>
+                @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
+                {
+                    <div class="d-flex gap-2">
+                        @{
+                            var isFav = Model?.Favorites?.Any(f => f.UserId == currentUserId) == true;
+                        }
+                        <!-- 🔹 ИЗБРАННОЕ: СКРЫТО ДЛЯ АДМИНОВ -->
+                        <button type="button" class="btn btn-sm p-0 favorite-toggle border-0 bg-transparent"
+                                data-project-id="@Model?.Id" title="@(isFav ? "Убрать из избранного" : "В избранное")">
+                            <i class="bi @(isFav ? "bi-heart-fill text-danger" : "bi-heart text-secondary")"
+                               style="font-size: 1.25rem; transition: color 0.2s;"></i>
+                        </button>
+                        @if (Model?.ApplicationUserId != currentUserId)
+                        {
+                            <form asp-controller="Messages" asp-action="Start" method="post" class="d-inline">
+                                <input type="hidden" name="userId" value="@Model?.ApplicationUserId" />
+                                <button type="submit" class="btn btn-outline-primary btn-sm p-2" title="Написать сообщение">
+                                    <i class="bi bi-chat-dots"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Основная карточка -->
+            <div class="card shadow-sm mb-5">
+                <div class="card-header bg-white py-3">
+                    <a asp-controller="Projects" asp-action="UserPortfolio"
+                       asp-route-userId="@Model?.ApplicationUserId"
+                       asp-route-fromAdmin="@(fromAdmin ? "true" : null)"
+                       class="d-flex align-items-center text-decoration-none">
+                        @if (!string.IsNullOrEmpty(Model?.ApplicationUser?.ProfilePhotoUrl))
+                        {
+                            <img src="@Model.ApplicationUser.ProfilePhotoUrl" alt="Фото профиля"
+                                 class="rounded-circle me-3" style="width: 48px; height: 48px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="avatar-sm bg-secondary text-secondary rounded-circle d-flex align-items-center justify-content-center fw-bold me-3 fs-5">
+                                @Model?.ApplicationUser?.DisplayName?.Substring(0, 1).ToUpper()
+                            </div>
+                        }
+                        <div>
+                            <h5 class="mb-0 text-dark">@Model?.ApplicationUser?.DisplayName</h5>
+                            <small class="text-muted">Автор проекта</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <h1 class="h3 fw-bold mb-3 text-dark">@Model?.Title</h1>
+                    <p class="lead text-secondary">@Model?.Description</p>
+                    @if (Model?.Images != null && Model.Images.Any())
+                    {
+                        <div class="row g-3 mt-4">
+                            @foreach (var image in Model.Images)
+                            {
+                                <div class="col-md-6 col-lg-4">
+                                    <img src="@image.Url" class="img-fluid rounded shadow-sm project-image"
+                                         style="max-height: 280px; object-fit: cover; width: 100%; cursor: pointer;"
+                                         alt="@image.Name">
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle me-2"></i>К этому проекту пока нет фотографий.
+                        </div>
+                    }
+                    <div class="row mt-5">
+                        <div class="col-md-6">
+                            <h5 class="mb-3 text-dark fw-bold">Информация о проекте</h5>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="text-dark d-flex align-items-center">
+                                    <strong class="me-2" style="width: 140px;">Тип приложения:</strong>
+                                    <span class="badge badge-outline-custom" style="border-color: #E1FF8C;">
+                                        @(Model?.AppType?.Name ?? "Не указан")
+                                    </span>
+                                </div>
+                                <div class="text-dark d-flex align-items-center">
+                                    <strong class="me-2" style="width: 140px;">Статус:</strong>
+                                    <span class="badge badge-outline-custom" style="border-color: #FFD580;">
+                                        @(Model?.Status?.Name ?? "Не указан")
+                                    </span>
+                                </div>
+                                <div class="text-dark d-flex align-items-center">
+                                    <strong class="me-2" style="width: 140px;">Сложность:</strong>
+                                    <span class="badge badge-outline-custom">
+                                        @(Model?.ComplexityLevel?.Name ?? "Не указана")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3 text-dark">Ссылки</h5>
+                            <div class="d-flex flex-column gap-2">
+                                @if (!string.IsNullOrEmpty(Model?.RepositoryUrl))
+                                {
+                                    <div class="text-dark">
+                                        <i class="bi bi-github me-2"></i>
+                                        <strong>Репозиторий:</strong>
+                                        <a href="@Model.RepositoryUrl" target="_blank" rel="noopener noreferrer">Открыть</a>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(Model?.DemoUrl))
+                                {
+                                    <div class="text-dark">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        <strong>Демо:</strong>
+                                        <a href="@Model.DemoUrl" target="_blank" rel="noopener noreferrer">Открыть</a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    @if (Model?.ProjectTechnologies?.Any() == true)
+                    {
+                        <h5 class="mt-5 mb-3 text-dark">Технологии</h5>
+                        <div class="tech-tags">
+                            @foreach (var pt in Model.ProjectTechnologies)
+                            {
+                                <span class="tech-tag">@pt.Technology?.Name</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Отзывы -->
+            <h4 class="mb-4 text-dark">
+                <i class="bi bi-chat-square-text me-2"></i>
+                Отзывы (@(Model?.Reviews?.Count ?? 0))
+            </h4>
+            @if (Model?.Reviews?.Any() == true)
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var review in Model.Reviews.OrderByDescending(r => r.Date))
+                    {
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@review.UserId"
+                                       class="text-decoration-none fw-medium">
+                                        @(!string.IsNullOrEmpty(review.User?.DisplayName)
+                                                                        ? review.User.DisplayName
+                                                                        : (review.User?.UserName ?? "Аноним"))
+                            </a>
+                            <small class="text-muted">@review.Date.ToString("dd.MM.yyyy HH:mm")</small>
+                        </div>
+                        <div class="mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi bi-star-fill @(i <= review.Rating ? "text-warning" : "text-muted opacity-25")"></i>
+                                    }
+                                    <span class="ms-2 fw-medium">@review.Rating / 5</span>
+                                </div>
+                                <p class="mb-0 text-dark">@review.Text</p>
+                                <!-- 🔹 КНОПКА УДАЛЕНИЯ: ТОЛЬКО ДЛЯ АВТОРА ОТЗЫВА -->
+                                @if (currentUserId != null && review.UserId == currentUserId)
+                                {
+                                    <form asp-controller="Projects" asp-action="DeleteReview" method="post" class="mt-2">
+                                        <input type="hidden" name="reviewId" value="@review.Id" />
+                                        <input type="hidden" name="projectId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Удалить этот отзыв?')">
+                                            <i class="bi bi-trash me-1"></i>Удалить
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert-lemon rounded-3 p-4 text-center mb-5" style="background: var(--hero-bg); border: 1px solid var(--border);">
+                    <i class="bi bi-chat-square-text fs-3 mb-2 d-block"></i>
+                    <p class="mb-0 fw-medium">Пока нет отзывов к этому проекту.</p>
+                </div>
+            }
+
+            <!-- Форма отзыва: СКРЫТА ДЛЯ АДМИНОВ -->
+            @if (User.Identity?.IsAuthenticated == true && ViewBag.CanReview == true && !User.IsInRole("Admin"))
+            {
+                <div class="card mt-5">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 text-dark">Оставить отзыв</h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-controller="Projects" asp-action="AddReview" method="post">
+                            <input type="hidden" name="projectId" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label class="form-label text-dark">Оценка (1–5)</label>
+                                <select name="Rating" class="form-select" required>
+                                    <option value="5">5 — Отлично</option>
+                                    <option value="4">4 — Хорошо</option>
+                                    <option value="3">3 — Нормально</option>
+                                    <option value="2">2 — Плохо</option>
+                                    <option value="1">1 — Ужасно</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-dark">Текст отзыва</label>
+                                <textarea name="Text" class="form-control" rows="4"
+                                      placeholder="Поделитесь вашим мнением о проекте..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>Опубликовать отзыв
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для фото -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <img id="modalImage" src="" alt="Увеличенное фото" class="img-fluid rounded" style="width: 100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Модальное окно для изображений
+        document.querySelectorAll('.project-image').forEach(img => {
+            img.addEventListener('click', function () {
+                document.getElementById('modalImage').src = this.src;
+                var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+                myModal.show();
+            });
+        });
+
+        // 🔹 Избранное — меняем только иконку, без фона кнопки
+        const favoriteBtn = document.querySelector('.favorite-toggle');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', async function () {
+                const projectId = this.dataset.projectId;
+                const icon = this.querySelector('i');
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (!tokenInput) return;
+                try {
+                    const response = await fetch('/Favorites/Toggle', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': tokenInput.value },
+                        body: `projectId=${projectId}`
+                    });
+                    if (response.ok) {
+                        if (icon.classList.contains('bi-heart')) {
+                            icon.classList.replace('bi-heart', 'bi-heart-fill');
+                            icon.classList.replace('text-secondary', 'text-danger');
+                            this.setAttribute('title', 'Убрать из избранного');
+                        } else {
+                            icon.classList.replace('bi-heart-fill', 'bi-heart');
+                            icon.classList.replace('text-danger', 'text-secondary');
+                            this.setAttribute('title', 'В избранное');
+                        }
+                    }
+                } catch (error) { console.error('Ошибка:', error); }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,73 @@
+﻿@page
+@model WebApplication4.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Регистрация";
+}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-person-plus me-2 text-muted"></i>Регистрация
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.DisplayName" class="form-label fw-medium small text-muted"></label>
+                            <input asp-for="Input.DisplayName" class="form-control form-control-lg bg-light border-0" autocomplete="username" />
+                            <span asp-validation-for="Input.DisplayName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Email" class="form-label fw-medium small text-muted"></label>
+                            <input asp-for="Input.Email" class="form-control form-control-lg bg-light border-0" autocomplete="username" />
+                            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Password" class="form-label fw-medium small text-muted"></label>
+                            <input asp-for="Input.Password" class="form-control form-control-lg bg-light border-0" autocomplete="new-password" />
+                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.ConfirmPassword" class="form-label fw-medium small text-muted"></label>
+                            <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg bg-light border-0" autocomplete="new-password" />
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button id="registerSubmit" type="submit" class="btn btn-primary btn-lg">Зарегистрироваться</button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4" />
+
+                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                        <div>
+                            <p class="text-muted small text-center mb-3">Или войдите через соцсети</p>
+                            @foreach (var provider in Model.ExternalLogins!)
+                            {
+                                <button type="submit" class="btn btn-outline-secondary w-100 mb-2" name="provider" value="@provider.Name" title="Войти с помощью учетной записи @provider.DisplayName">
+                                    <i class="bi bi-google me-2"></i>@provider.DisplayName
+                                </button>
+                            }
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a asp-page="./Login" class="text-decoration-none small">Уже есть аккаунт? Войти</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

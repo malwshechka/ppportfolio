@@ -1,0 +1,17 @@
+﻿@page
+@model WebApplication4.Areas.Identity.Pages.Account.LogoutModel
+
+@{
+    ViewData["Title"] = "Выход";
+}
+
+<div class="container py-5 text-center">
+    <h2>Вы успешно вышли из аккаунта</h2>
+    <p>Перенаправляем на главную...</p>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(() => window.location.href = '/', 800);
+    </script>
+}

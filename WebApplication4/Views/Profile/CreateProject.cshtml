@@ -1,0 +1,104 @@
+﻿@model WebApplication4.Models.ProjectViewModel
+@{
+    ViewData["Title"] = "Создание проекта";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="mb-4">Новый проект</h2>
+            <div class="card">
+                <div class="card-body p-4">
+                    <form asp-action="CreateProject" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="Title" class="form-label">Название проекта *</label>
+                            <input asp-for="Title" class="form-control form-control-lg" placeholder="Введите название" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label">Описание *</label>
+                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Опишите ваш проект"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label asp-for="AppTypeId" class="form-label">Тип приложения</label>
+                                <select asp-for="AppTypeId" class="form-select"
+                                        asp-items="@(new SelectList(ViewBag.AppTypes, "Id", "Name"))">
+                                    <option value="">Выберите тип</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="StatusId" class="form-label">Статус</label>
+                                <select asp-for="StatusId" class="form-select"
+                                        asp-items="@(new SelectList(ViewBag.Statuses, "Id", "Name"))">
+                                    <option value="">Выберите статус</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="ComplexityLevelId" class="form-label">Уровень сложности</label>
+                                <select asp-for="ComplexityLevelId" class="form-select"
+                                        asp-items="@(new SelectList(ViewBag.ComplexityLevels, "Id", "Name"))">
+                                    <option value="">Выберите сложность</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="RepositoryUrl" class="form-label">Ссылка на репозиторий</label>
+                            <input asp-for="RepositoryUrl" class="form-control" placeholder="https://github.com/..." />
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="DemoUrl" class="form-label">Ссылка на демо</label>
+                            <input asp-for="DemoUrl" class="form-control" placeholder="https://..." />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Технологии</label>
+                            <div class="row g-2">
+                                <!-- ИСПРАВЛЕНИЕ ОШИБКИ: Проверка на null -->
+                                @if (ViewBag.Technologies != null)
+                                {
+                                    foreach (var tech in ViewBag.Technologies)
+                                    {
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="SelectedTechnologyIds" value="@tech.Id"
+                                                       id="tech_@tech.Id"
+                                                       @(Model.SelectedTechnologyIds != null && Model.SelectedTechnologyIds.Contains(tech.Id) ? "checked" : "") />
+                                                <label class="form-check-label" for="tech_@tech.Id">@tech.Name</label>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Images" class="form-label">Фотографии проекта</label>
+                            <input asp-for="Images" type="file" multiple class="form-control" accept="image/*" />
+                            <small class="text-muted">Можно загрузить несколько изображений</small>
+                        </div>
+
+                        <div class="d-flex gap-3 pt-3 border-top">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                Создать
+                            </button>
+                            <a asp-action="MyProjects" class="btn btn-outline-secondary btn-lg">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

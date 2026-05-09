@@ -1,0 +1,68 @@
+﻿@model List<WebApplication4.Models.Project>
+@{
+    ViewData["Title"] = "Избранное";
+}
+<div class="container-fluid py-5 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Избранные проекты</h1>
+            <p class="text-muted mb-0">Проекты, которые вы добавили в избранное</p>
+        </div>
+        <a asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>В профиль</a>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-bookmark fs-1 text-muted mb-3"></i>
+                <h5 class="mb-2">Список избранного пуст</h5>
+                <p class="text-muted">Добавляйте проекты, нажав на иконку сердца на странице проекта или на главной</p>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3"><i class="bi bi-house me-1"></i>Перейти к проектам</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var project in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="project-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                @if (!string.IsNullOrEmpty(project.ApplicationUser?.ProfilePhotoUrl))
+                                {
+                                    <img src="@project.ApplicationUser.ProfilePhotoUrl" alt="Фото профиля" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">@project.ApplicationUser?.DisplayName?.Substring(0, 1).ToUpper()</div>
+                                }
+                                <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@project.ApplicationUserId" class="text-decoration-none small">@project.ApplicationUser?.DisplayName</a>
+                            </div>
+                            <h5 class="card-title mb-2">@project.Title</h5>
+                            <p class="card-text text-secondary small mb-3">@(project.Description?.Length > 120 ? project.Description.Substring(0, 120) + "..." : project.Description ?? "Нет описания")</p>
+                            <div class="tech-tags mb-3">
+                                @foreach (var pt in project.ProjectTechnologies?.Take(4) ?? Enumerable.Empty<WebApplication4.Models.ProjectTechnology>())
+                                {
+                                    <span class="tech-tag">@pt.Technology?.Name</span>
+                                }
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <span class="badge bg-@(project.Status?.Name == "Завершён" ? "success" : "secondary")">@project.Status?.Name</span>
+                                @if (project.Reviews?.Any() == true)
+                                {
+                                    var avg = project.Reviews.Average(r => r.Rating);
+                                    <span class="text-warning">★ @avg.ToString("F1")</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id" class="btn btn-primary w-100"><i class="bi bi-arrow-right me-1"></i>Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

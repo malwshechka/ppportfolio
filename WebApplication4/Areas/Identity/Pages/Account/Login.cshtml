@@ -1,0 +1,69 @@
+﻿@page
+@model WebApplication4.Pages.Identity.Account.LoginModel
+
+@{
+    ViewData["Title"] = "Вход";
+}
+
+<div class="container py-5" style="max-width: 500px;">
+    <div class="card shadow">
+        <div class="card-body">
+            <h2 class="text-center mb-4">Вход</h2>
+            <form id="account" method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label">Пароль</label>
+                    <div class="input-group">
+                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" id="loginPasswordInput" type="password" />
+                        <button class="btn btn-outline-secondary" type="button" id="toggleLoginPassword" aria-label="Показать пароль">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" asp-for="Input.RememberMe" />
+                    <label asp-for="Input.RememberMe" class="form-check-label">Запомнить меня</label>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                </div>
+
+                <div class="mt-3 text-center">
+                    <a asp-page="./ForgotPassword" class="text-decoration-none">Забыли пароль?</a>
+                </div>
+                <div class="text-center">
+                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Регистрация</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleLoginPassword');
+            const passwordInput = document.getElementById('loginPasswordInput');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function () {
+                    const isPassword = passwordInput.type === 'password';
+                    passwordInput.type = isPassword ? 'text' : 'password';
+                    this.innerHTML = isPassword ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+                    this.setAttribute('aria-label', isPassword ? 'Скрыть пароль' : 'Показать пароль');
+                });
+            }
+        });
+    </script>
+}

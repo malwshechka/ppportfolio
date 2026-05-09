@@ -1,0 +1,34 @@
+﻿@model WebApplication4.Models.Project
+
+<h2>Создать проект</h2>
+
+<form asp-action="Create" method="post">
+
+    <div>
+        <label>Название</label>
+        <input asp-for="Title" />
+    </div>
+
+    <div>
+        <label>Описание</label>
+        <textarea asp-for="Description"></textarea>
+    </div>
+
+    <div>
+        <label>StatusId</label>
+        <input asp-for="StatusId" />
+    </div>
+
+    <div>
+        <label>AppTypeId</label>
+        <input asp-for="AppTypeId" />
+    </div>
+
+    <div>
+        <label>ComplexityLevelId</label>
+        <input asp-for="ComplexityLevelId" />
+    </div>
+
+    <button type="submit">Создать</button>
+
+</form>

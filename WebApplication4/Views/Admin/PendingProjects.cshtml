@@ -1,0 +1,111 @@
+﻿@model List<WebApplication4.Models.Project>
+@{
+    ViewData["Title"] = "Модерация проектов";
+}
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                Проекты на модерации
+            </h1>
+            <p class="text-muted mb-0">Ожидают проверки: <strong>@Model.Count</strong></p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Назад
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-check-circle-fill text-success fs-1 mb-3"></i>
+                <h5 class="mb-2">Все проекты проверены!</h5>
+                <p class="text-muted">Новых проектов на модерации пока нет.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Проект</th>
+                            <th>Автор</th>
+                            <th>Тип / Статус</th>
+                            <th>Технологии</th>
+                            <th>Дата</th>
+                            <th class="text-end pe-4">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var project in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-medium">@project.Title</div>
+                                    <small class="text-muted d-block mt-1">
+                                        @(project.Description?.Length > 90 ? project.Description.Substring(0, 90) + "..." : project.Description ?? "Нет описания")
+                                    </small>
+                                </td>
+                                <td>@project.ApplicationUser?.DisplayName</td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary">@project.AppType?.Name</span><br>
+                                    <span class="badge bg-secondary-subtle text-secondary">@project.Status?.Name</span>
+                                </td>
+                                <td>
+                                    @if (project.ProjectTechnologies?.Any() == true)
+                                    {
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach (var pt in project.ProjectTechnologies.Take(3))
+                                            {
+                                                <span class="badge bg-light text-dark">@pt.Technology?.Name</span>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                                <td><small class="text-muted">@project.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small></td>
+                                <td class="text-end pe-4">
+                                    <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id"
+                                       class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="bi bi-eye"></i> Просмотреть
+                                    </a>
+
+                                    <!-- Кнопка Одобрить: Лимонный фон, черный текст -->
+                                    <form asp-action="ApproveProject" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@project.Id" />
+                                        <button type="submit" class="btn btn-sm"
+                                                style="background-color: #E1FF8C; color: #000; border: none; font-weight: 500;"
+                                                onclick="return confirm('Одобрить и опубликовать проект «@project.Title»?')">
+                                            <i class="bi bi-check-circle"></i> Одобрить
+                                        </button>
+                                    </form>
+
+                                    <!-- Кнопка Отклонить: Оранжевый фон, черный текст -->
+                                    <form asp-action="RejectProject" method="post" class="d-inline ms-2">
+                                        <input type="hidden" name="id" value="@project.Id" />
+                                        <button type="submit" class="btn btn-sm"
+                                                style="background-color: #FFD6A5; color: #000; border: none; font-weight: 500;"
+                                                onclick="return confirm('Отклонить проект «@project.Title»?')">
+                                            <i class="bi bi-x-circle"></i> Отклонить
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

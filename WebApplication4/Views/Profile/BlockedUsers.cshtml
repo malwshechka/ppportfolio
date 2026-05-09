@@ -1,0 +1,55 @@
+﻿@model List<WebApplication4.Models.UserBlock>
+@{
+    ViewData["Title"] = "Черный список";
+}
+<div class="container-fluid py-5 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Черный список</h1>
+            <p class="text-muted mb-0">Управление заблокированными пользователями</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>В профиль</a>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-check-circle fs-1 text-success mb-3"></i>
+                <h5 class="mb-2">Список пуст</h5>
+                <p class="text-muted">Вы никого не блокировали.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="list-group shadow-sm rounded-3">
+            @foreach (var block in Model)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        @if (!string.IsNullOrEmpty(block.BlockedUserRef?.ProfilePhotoUrl))
+                        {
+                            <img src="@block.BlockedUserRef.ProfilePhotoUrl" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+                        }
+                        else
+                        {
+                            <div class="bg-secondary text-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                                @(block.BlockedUserRef?.DisplayName?.Substring(0, 1).ToUpper() ?? "?")
+                            </div>
+                        }
+                        <div>
+                            <h6 class="mb-1">@block.BlockedUserRef?.DisplayName</h6>
+                            <small class="text-muted">Заблокирован @block.BlockedAt.ToString("dd.MM.yyyy")</small>
+                        </div>
+                    </div>
+                    <form asp-controller="Messages" asp-action="UnblockUser" method="post">
+                        <input type="hidden" name="userId" value="@block.BlockedUserId" />
+                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-unlock me-1"></i>Разблокировать
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</div>

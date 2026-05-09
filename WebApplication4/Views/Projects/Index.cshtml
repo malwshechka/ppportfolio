@@ -1,0 +1,33 @@
+﻿@model List<WebApplication4.Models.Project>
+
+@{
+    ViewData["Title"] = "Проекты";
+}
+
+<h1>Мои проекты</h1>
+<a asp-action="Create" class="btn btn-success mb-3">+ Добавить проект</a>
+
+@if (Model == null || Model.Count == 0)
+{
+    <p>Пока нет проектов. <a asp-action="Create">Добавить первый</a></p>
+}
+else
+{
+    <div class="row">
+        @foreach (var project in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@project.Title</h5>
+                        <p class="card-text">@project.Description</p>
+                        <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@project.ApplicationUserId"
+                           class="text-decoration-none fw-medium small">
+                            @project.ApplicationUser?.DisplayName
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

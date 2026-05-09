@@ -1,0 +1,167 @@
+﻿@model List<WebApplication4.Models.UserReport>
+@{
+    ViewData["Title"] = "Жалобы";
+}
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-1">Жалобы пользователей
+        </h1>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Назад
+        </a>
+    </div>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-lemon">@TempData["Success"]</div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-check-circle fs-1 text-success mb-3"></i>
+                <h5 class="mb-2">Жалоб нет</h5>
+                <p class="text-muted">Все жалобы рассмотрены</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 table-complaints">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Тип жалобы</th>
+                            <th>Автор</th>
+                            <th>Нарушитель</th>
+                            <th>Статус</th>
+                            <th class="text-end pe-4">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in Model)
+                        {
+                            var typeName = report.Type switch
+                            {
+                                WebApplication4.Models.ReportType.Spam => "Спам",
+                                WebApplication4.Models.ReportType.Harassment => "Оскорбления",
+                                WebApplication4.Models.ReportType.InappropriateContent => "Неприемлемый контент",
+                                WebApplication4.Models.ReportType.FakeProfile => "Фейковый профиль",
+                                _ => "Другое"
+                            };
+
+                            <tr class="@(report.IsResolved ? "resolved" : "pending")">
+                                <td class="ps-4">
+                                    <div class="fw-medium">@typeName</div>
+                                    <small class="text-muted">@report.Reason</small>
+                                    @if (!string.IsNullOrEmpty(report.AdditionalComment))
+                                    {
+                                        <br>
+                                        <small class="text-secondary">"@report.AdditionalComment"</small>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@report.ReporterId" class="text-decoration-none">
+                                        @report.Reporter.DisplayName
+                                    </a>
+                                </td>
+                                <td>
+                                    <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@report.ReportedUserId" class="text-decoration-none fw-bold">
+                                        @report.ReportedUser.DisplayName
+                                    </a>
+                                </td>
+                                <td>
+                                    @if (report.IsResolved)
+                                    {
+                                        <span class="badge badge-resolved">
+                                            <i class="bi bi-check-circle me-1"></i>Решено
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-pending-complaint">
+                                            <i class="bi bi-hourglass-split me-1"></i>На рассмотрении
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    @if (!report.IsResolved)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                data-bs-toggle="modal" data-bs-target="#warningModal"
+                                                data-userid="@report.ReportedUserId" data-reportid="@report.Id">
+                                            <i class="bi bi-exclamation-triangle"></i> Предупредить
+                                        </button>
+                                        <form asp-action="ResolveReport" method="post" class="d-inline">
+                                            <input type="hidden" name="reportId" value="@report.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-check-lg"></i> Закрыть
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">@report.AdminResponse</small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+<div class="modal fade" id="warningModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Отправить предупреждение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Admin" asp-action="SendWarning" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="warnUserId" name="userId" value="" />
+                    <input type="hidden" id="warnReportId" name="reportId" value="" />
+                    <textarea name="message" class="form-control" rows="3" placeholder="Текст предупреждения..." required></textarea>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Отправить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('warningModal').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        document.getElementById('warnUserId').value = button.getAttribute('data-userid');
+        document.getElementById('warnReportId').value = button.getAttribute('data-reportid');
+    });
+</script>
+<style>
+    .table-complaints tbody tr.resolved {
+        background: #F9FAFB !important;
+    }
+
+    .table-complaints tbody tr.pending {
+        background: #FFFBEB !important;
+    }
+
+    .table-complaints td {
+        color: #111111 !important;
+    }
+
+    .badge-resolved {
+        background: #E1FF8C !important;
+        color: #111111 !important;
+        border: 1px solid #E1FF8C !important;
+    }
+
+    .badge-pending-complaint {
+        background: #FFFAEB !important;
+        color: #B54708 !important;
+        border: 1px solid #FEDF89 !important;
+    }
+</style>

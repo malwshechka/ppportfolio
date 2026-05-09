@@ -1,0 +1,364 @@
+﻿@model WebApplication4.Models.UserPortfolioViewModel
+@using WebApplication4.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+
+@{
+    ViewData["Title"] = $"Портфолио - {Model.User.DisplayName ?? Model.User.UserName}";
+    var fromAdmin = Context.Request.Query["fromAdmin"].ToString() == "true";
+    var currentUserId = ViewBag.CurrentUserId as string;
+
+    // 🔹 СНАЧАЛА объявляем переменные
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var isAdmin = User.IsInRole("Admin");
+
+    // 🔹 Проверка блокировки через UserBlocks (двусторонняя)
+    var isUserBlocked = false;
+    if (isAuthenticated && !isAdmin && currentUserId != null)
+    {
+        isUserBlocked = await DbContext.UserBlocks
+            .AnyAsync(b => (b.BlockerId == currentUserId && b.BlockedUserId == Model.User.Id) ||
+                          (b.BlockerId == Model.User.Id && b.BlockedUserId == currentUserId));
+    }
+
+    // 🔹 Проверяем, заблокировал ли текущий пользователь этого (для кнопки Разблокировать)
+    var hasBlocked = false;
+    if (isAuthenticated && !isAdmin && currentUserId != null)
+    {
+        hasBlocked = await DbContext.UserBlocks
+            .AnyAsync(b => b.BlockerId == currentUserId && b.BlockedUserId == Model.User.Id);
+    }
+
+    // 🔹 Проверяем подписку
+    var isSubscribed = false;
+    if (isAuthenticated && !isAdmin && currentUserId != null && !isUserBlocked)
+    {
+        isSubscribed = await DbContext.UserSubscriptions
+            .AnyAsync(s => s.SubscriberId == currentUserId && s.FollowedUserId == Model.User.Id);
+    }
+}
+
+<div class="container-fluid py-5 px-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="mb-4">
+                @if (fromAdmin)
+                {
+                    <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Назад</a>
+                }
+                else
+                {
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> На главную</a>
+                }
+            </div>
+
+            <!-- 🔹 Карточка профиля -->
+            <div class="card shadow border-0 mb-5 position-relative" style="z-index: 1; overflow: visible;">
+                <div class="card-body text-center py-4" style="overflow: visible;">
+
+                    <!-- 🔹 МЕНЮ С ТРЕМЯ ТОЧКАМИ -->
+                    @if (isAuthenticated && !isAdmin && currentUserId != Model.User.Id && !isUserBlocked)
+                    {
+                        <div class="dropdown position-absolute top-0 end-0 mt-3 me-3" style="z-index: 1080;">
+                            <button class="btn btn-sm btn-light rounded-circle p-1 border" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false"
+                                    style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-three-dots-vertical" style="font-size: 16px;"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 220px; z-index: 1090 !important;">
+
+                                <!-- Подписка -->
+                                <li>
+                                    <form asp-controller="Profile" asp-action="ToggleSubscription" method="post">
+                                        <input type="hidden" name="userId" value="@Model.User.Id" />
+                                        <button type="submit" class="dropdown-item d-flex align-items-center">
+                                            <i class="bi bi-person-plus@(isSubscribed ? "" : "-fill") me-2"></i>
+                                            @(isSubscribed ? "Отписаться" : "Подписаться")
+                                        </button>
+                                    </form>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+
+                                <!-- Написать сообщение -->
+                                <li>
+                                    <form asp-controller="Messages" asp-action="Start" method="post">
+                                        <input type="hidden" name="userId" value="@Model.User.Id" />
+                                        <button type="submit" class="dropdown-item d-flex align-items-center">
+                                            <i class="bi bi-chat-dots me-2 text-primary"></i>
+                                            <span>Написать сообщение</span>
+                                        </button>
+                                    </form>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+
+                                <!-- Пожаловаться -->
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center text-danger"
+                                            data-bs-toggle="modal" data-bs-target="#reportModal" data-userid="@Model.User.Id">
+                                        <i class="bi bi-shield-exclamation me-2"></i>
+                                        <span>Пожаловаться</span>
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+
+                                <!-- Блокировка/Разблокировка -->
+                                <li>
+                                    @if (hasBlocked)
+                                    {
+                                        <form asp-controller="Messages" asp-action="UnblockUser" method="post">
+                                            <input type="hidden" name="userId" value="@Model.User.Id" />
+                                            <button type="submit" class="dropdown-item d-flex align-items-center text-success">
+                                                <i class="bi bi-unlock me-2"></i>
+                                                <span>Разблокировать</span>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-controller="Messages" asp-action="BlockUser" method="post">
+                                            <input type="hidden" name="userId" value="@Model.User.Id" />
+                                            <button type="submit" class="dropdown-item d-flex align-items-center text-danger"
+                                                    onclick="return confirm('Заблокировать пользователя? Вы не сможете получать от него сообщения.')">
+                                                <i class="bi bi-slash-circle me-2"></i>
+                                                <span>Заблокировать</span>
+                                            </button>
+                                        </form>
+                                    }
+                                </li>
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- 🔹 АВАТАР: скрыт если пользователь нас заблокировал -->
+                    @if (!string.IsNullOrEmpty(Model.User.ProfilePhotoUrl) && !isUserBlocked)
+                    {
+                        <img src="@Model.User.ProfilePhotoUrl" alt="Фото" class="rounded-circle mb-3"
+                             style="width: 120px; height: 120px; object-fit: cover; border: 4px solid var(--hero-bg);" />
+                    }
+                    else if (!isUserBlocked)
+                    {
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold mx-auto mb-3 fs-1"
+                             style="width: 120px; height: 120px;">
+                            @(Model.User.DisplayName?.Substring(0, 1).ToUpper() ?? Model.User.UserName?.Substring(0, 1).ToUpper())
+                        </div>
+                    }
+
+                    <!-- 🔹 Имя и почта: всегда видны -->
+                    <h2 class="fw-bold mb-2">@Model.User.DisplayName</h2>
+                    <p class="text-muted mb-3">@Model.User.Email</p>
+
+                    @if (!string.IsNullOrEmpty(Model.User.Bio) && !isUserBlocked)
+                    {
+                        <p class="mt-3 lead">@Model.User.Bio</p>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.User.Skills) && !isUserBlocked)
+                    {
+                        <div class="mt-3">
+                            <span class="fw-bold">Навыки:</span>
+                            <span class="text-secondary">@Model.User.Skills</span>
+                        </div>
+                    }
+
+                    <!-- 🔹 Соцсети: скрыты если заблокирован -->
+                    @if (!isUserBlocked)
+                    {
+                        <div class="d-flex justify-content-center gap-4 mt-4">
+                            @if (!string.IsNullOrEmpty(Model.User.GitHubUrl))
+                            {
+                                <a href="@Model.User.GitHubUrl" target="_blank" class="text-decoration-none text-secondary hover-primary">
+                                    <i class="bi bi-github fs-3"></i>
+                                </a>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.User.LinkedInUrl))
+                            {
+                                <a href="@Model.User.LinkedInUrl" target="_blank" class="text-decoration-none text-secondary hover-primary">
+                                    <i class="bi bi-linkedin fs-3"></i>
+                                </a>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.User.TelegramUrl))
+                            {
+                                <a href="@Model.User.TelegramUrl" target="_blank" class="text-decoration-none text-secondary hover-primary">
+                                    <i class="bi bi-telegram fs-3"></i>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (!isUserBlocked)
+            {
+                <!-- Статистика -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="stat-card h-100 py-4 text-center">
+                            <h3 class="mb-1 fw-bold" style="color: var(--accent);">@Model.TotalProjects</h3>
+                            <p class="mb-0 small text-uppercase fw-bold text-muted">Проекты</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card h-100 py-4 text-center">
+                            <h3 class="mb-1 fw-bold" style="color: var(--success-text);">@Model.TotalReviews</h3>
+                            <p class="mb-0 small text-uppercase fw-bold text-muted">Отзывы</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card h-100 py-4 text-center">
+                            <h3 class="mb-1 fw-bold" style="color: #B54708;">@Model.AverageRating.ToString("F1")</h3>
+                            <p class="mb-0 small text-uppercase fw-bold text-muted">Рейтинг</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Проекты -->
+                <h4 class="mb-4">Проекты (@Model.Projects.Count)</h4>
+                @if (!Model.Projects.Any())
+                {
+                    <div class="alert alert-lemon text-center rounded-3">
+                        <i class="bi bi-info-circle me-2"></i>У пользователя пока нет опубликованных проектов.
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        @foreach (var project in Model.Projects)
+                        {
+                            var isFav = currentUserId != null && project.Favorites?.Any(f => f.UserId == currentUserId) == true;
+                            <div class="col-md-6 col-lg-4">
+                                <div class="project-card h-100 shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h5 class="card-title mb-0">@project.Title</h5>
+                                            @if (isAuthenticated)
+                                            {
+                                                <button type="button" class="btn btn-sm p-0 favorite-toggle border-0 bg-transparent"
+                                                        data-project-id="@project.Id"
+                                                        title="@(isFav ? "Убрать из избранного" : "В избранное")">
+                                                    <i class="bi @(isFav ? "bi-heart-fill text-danger" : "bi-heart text-secondary")"
+                                                       style="font-size: 1.25rem;"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                        <p class="card-text text-secondary small mb-3">
+                                            @(project.Description?.Length > 120 ? project.Description.Substring(0, 120) + "..." : project.Description)
+                                        </p>
+                                        @if (project.Images?.Any() == true)
+                                        {
+                                            <img src="@project.Images.First().Url" class="img-fluid rounded mb-3"
+                                                 style="height: 180px; object-fit: cover; width: 100%;" alt="Фото">
+                                        }
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-secondary">@project.Status?.Name</span>
+                                            @if (project.Reviews?.Any() == true)
+                                            {
+                                                <span class="text-warning">★ @project.Reviews.Average(r => r.Rating).ToString("F1")</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-white">
+                                        <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id"
+                                           asp-route-fromAdmin="@(fromAdmin ? "true" : null)" class="btn btn-primary w-100 btn-sm">Подробнее</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            <!-- 🔹 ЕСЛИ ПОЛЬЗОВАТЕЛЬ НАС ЗАБЛОКИРОВАЛ: просто не показываем контент, без сообщений -->
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно жалобы -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Пожаловаться на пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <form asp-controller="Profile" asp-action="SubmitReport" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="reportUserId" name="userId" value="" />
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Причина</label>
+                        <select name="type" class="form-select" required>
+                            <option value="">Выберите причину</option>
+                            <option value="Spam">Спам</option>
+                            <option value="Harassment">Оскорбления</option>
+                            <option value="InappropriateContent">Неприемлемый контент</option>
+                            <option value="FakeProfile">Фейковый профиль</option>
+                            <option value="Other">Другое</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Комментарий</label>
+                        <textarea name="comment" class="form-control" rows="3" placeholder="Опишите ситуацию..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Отправить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Модальное окно жалобы
+    document.getElementById('reportModal')?.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var userId = button.getAttribute('data-userid');
+        var input = document.getElementById('reportUserId');
+        if (input) input.value = userId;
+    });
+
+    // Избранное
+    document.querySelectorAll('.favorite-toggle').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const projectId = this.dataset.projectId;
+            const icon = this.querySelector('i');
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            if (!token) return;
+
+            try {
+                const response = await fetch('/Favorites/Toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: `projectId=${projectId}`
+                });
+
+                if (response.ok) {
+                    if (icon.classList.contains('bi-heart')) {
+                        icon.classList.replace('bi-heart', 'bi-heart-fill');
+                        icon.classList.replace('text-secondary', 'text-danger');
+                        this.setAttribute('title', 'Убрать из избранного');
+                    } else {
+                        icon.classList.replace('bi-heart-fill', 'bi-heart');
+                        icon.classList.replace('text-danger', 'text-secondary');
+                        this.setAttribute('title', 'В избранное');
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        });
+    });
+</script>
+
+<style>
+    .hover-primary:hover {
+        color: var(--primary) !important;
+    }
+
+    .dropdown-menu {
+        z-index: 1090 !important;
+    }
+</style>

@@ -1,0 +1,54 @@
+﻿@model List<WebApplication4.Models.Project>
+@{
+    ViewData["Title"] = "Лента проектов";
+}
+<div class="container-fluid py-5 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Лента проектов</h1>
+            <p class="text-muted mb-0">Проекты от разработчиков, на которых вы подписаны</p>
+        </div>
+    </div>
+    @if (ViewData["EmptyMessage"] != null)
+    {
+        <div class="alert alert-lemon text-center">@ViewData["EmptyMessage"]</div>
+    }
+    else if (!Model.Any())
+    {
+        <div class="alert alert-lemon text-center">У ваших подписок пока нет опубликованных проектов.</div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var project in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="project-card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                @if (!string.IsNullOrEmpty(project.ApplicationUser?.ProfilePhotoUrl))
+                                {
+                                    <img src="@project.ApplicationUser.ProfilePhotoUrl" class="rounded-circle" style="width:36px;height:36px;object-fit:cover;">
+                                }
+                                else
+                                {
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                                        @(project.ApplicationUser?.DisplayName?.Substring(0, 1).ToUpper() ?? "?")
+                                    </div>
+                                }
+                                <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@project.ApplicationUserId" class="text-decoration-none small">@project.ApplicationUser?.DisplayName</a>
+                            </div>
+                            <h5 class="card-title mb-2">@project.Title</h5>
+                            <p class="card-text text-secondary small mb-3">@(project.Description?.Length > 110 ? project.Description.Substring(0, 110) + "..." : project.Description)</p>
+                            @if (project.Images?.Any() == true)
+                            {
+                                <img src="@project.Images.First().Url" class="img-fluid rounded mb-3" style="height:180px;object-fit:cover;width:100%;">
+                            }
+                        </div>
+                        <div class="card-footer bg-white"><a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id" class="btn btn-primary w-100 btn-sm">Подробнее</a></div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

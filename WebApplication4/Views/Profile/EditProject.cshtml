@@ -1,0 +1,172 @@
+﻿@model WebApplication4.Models.ProjectViewModel
+@{
+    ViewData["Title"] = "Редактировать проект";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="mb-4 fw-bold">Редактировать проект</h2>
+
+            <div class="card">
+                <div class="card-body p-4">
+                    <form asp-action="EditProject" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <!-- Название -->
+                        <div class="mb-4">
+                            <label asp-for="Title" class="form-label">Название проекта *</label>
+                            <input asp-for="Title" class="form-control form-control-lg" placeholder="Введите название" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Описание -->
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label">Описание *</label>
+                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Опишите ваш проект"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Параметры: Тип, Статус, Сложность -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label asp-for="AppTypeId" class="form-label">Тип приложения</label>
+                                <select asp-for="AppTypeId" class="form-select" asp-items="@(new SelectList(ViewBag.AppTypes, "Id", "Name"))">
+                                    <option value="">Выберите тип</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="StatusId" class="form-label">Статус</label>
+                                <select asp-for="StatusId" class="form-select" asp-items="@(new SelectList(ViewBag.Statuses, "Id", "Name"))">
+                                    <option value="">Выберите статус</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="ComplexityLevelId" class="form-label">Сложность</label>
+                                <select asp-for="ComplexityLevelId" class="form-select" asp-items="@(new SelectList(ViewBag.ComplexityLevels, "Id", "Name"))">
+                                    <option value="">Выберите сложность</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Ссылки -->
+                        <div class="mb-4">
+                            <label asp-for="RepositoryUrl" class="form-label">Ссылка на репозиторий</label>
+                            <input asp-for="RepositoryUrl" class="form-control" placeholder="https://github.com/..." />
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="DemoUrl" class="form-label">Ссылка на демо</label>
+                            <input asp-for="DemoUrl" class="form-control" placeholder="https://..." />
+                        </div>
+
+                        <!-- Технологии -->
+                        <div class="mb-4">
+                            <label class="form-label">Технологии</label>
+                            <div class="row g-2">
+                                @if (ViewBag.Technologies != null)
+                                {
+                                    foreach (var tech in ViewBag.Technologies)
+                                    {
+                                        var isSelected = Model.SelectedTechnologyIds?.Contains(tech.Id) == true;
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="SelectedTechnologyIds" value="@tech.Id"
+                                                       id="tech_@tech.Id" @(isSelected ? "checked" : "") />
+                                                <label class="form-check-label" for="tech_@tech.Id">@tech.Name</label>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Разделитель -->
+                        <hr class="my-4 border-secondary" />
+
+                        <!-- Текущие скриншоты -->
+                        <div class="mb-4">
+                            <label class="form-label d-block fw-medium">Текущие скриншоты</label>
+                            <div class="row g-3" id="existing-images-container">
+                                @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+                                {
+                                    foreach (var img in Model.ExistingImages)
+                                    {
+                                        <div class="col-6 col-md-3 position-relative" id="img-wrapper-@img.Id">
+                                            <div class="ratio ratio-16x9 rounded overflow-hidden border border-subtle">
+                                                <img src="@img.Url" class="object-fit-cover" alt="Project screenshot" />
+                                            </div>
+                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 shadow-sm"
+                                                    onclick="deleteImage(@img.Id)" title="Удалить изображение"
+                                                    style="border-radius: 50%; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                <i class="bi bi-x-lg" style="font-size: 14px;"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="col-12">
+                                        <p class="text-muted small">Скриншотов пока нет.</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Загрузка новых скриншотов -->
+                        <div class="mb-4">
+                            <label asp-for="Images" class="form-label fw-medium">Загрузить новые скриншоты</label>
+                            <input asp-for="Images" type="file" class="form-control" multiple accept="image/*" />
+                            <small class="text-muted">Выбранные файлы будут добавлены к текущим. Поддерживаются форматы: JPG, PNG, WebP.</small>
+                        </div>
+
+                        <!-- Кнопки -->
+                        <div class="d-flex gap-3 pt-4 border-top">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                Сохранить изменения
+                            </button>
+                            <a asp-action="MyProjects" class="btn btn-outline-secondary btn-lg">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function deleteImage(imageId) {
+            if (confirm("Вы уверены, что хотите удалить этот скриншот? Это действие нельзя будет отменить.")) {
+                $.ajax({
+                    url: '@Url.Action("DeleteImage", "Profile")',
+                    type: 'POST',
+                    data: {
+                        imageId: imageId
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Удаляем элемент со страницы с плавной анимацией
+                            $('#img-wrapper-' + imageId).fadeOut(300, function() {
+                                $(this).remove();
+                                // Если картинок больше нет, выводим сообщение
+                                if ($('#existing-images-container').children().length === 0) {
+                                    $('#existing-images-container').append('<div class="col-12"><p class="text-muted small">Скриншотов пока нет.</p></div>');
+                                }
+                            });
+                        } else {
+                            alert("Не удалось удалить изображение.");
+                        }
+                    },
+                    error: function () {
+                        alert("Произошла ошибка при отправке запроса на сервер.");
+                    }
+                });
+            }
+        }
+    </script>
+}
