@@ -15,7 +15,7 @@ namespace WebApplication4.Models
         [ForeignKey("BlockedUserId")]
         public ApplicationUser BlockedUserRef { get; set; } = null!; // Переименовано
 
-        public DateTime BlockedAt { get; set; } = DateTime.Now;
+        public DateTime BlockedAt { get; set; } = DateTime.UtcNow;
         public string? Reason { get; set; }
     }
 
@@ -31,7 +31,7 @@ namespace WebApplication4.Models
         [ForeignKey("CreatedById")]
         public ApplicationUser Creator { get; set; } = null!;
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; }
 
         public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
@@ -52,7 +52,7 @@ namespace WebApplication4.Models
         public ApplicationUser User { get; set; } = null!;
 
         public bool IsAdmin { get; set; }
-        public DateTime JoinedAt { get; set; } = DateTime.Now;
+        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
         public bool IsMuted { get; set; }
         public bool Left { get; set; }
     }
@@ -73,7 +73,7 @@ namespace WebApplication4.Models
         public string Text { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsRead { get; set; }
         public bool IsDeleted { get; set; }
@@ -90,6 +90,6 @@ namespace WebApplication4.Models
         public ApplicationUser User { get; set; } = null!;
 
         public bool IsAdmin { get; set; }
-        public DateTime JoinedAt { get; set; } = DateTime.Now;
+        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
     }
 }

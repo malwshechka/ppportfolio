@@ -52,8 +52,30 @@
                             <p class="text-muted small text-center mb-3">Или войдите через соцсети</p>
                             @foreach (var provider in Model.ExternalLogins!)
                             {
-                                <button type="submit" class="btn btn-outline-secondary w-100 mb-2" name="provider" value="@provider.Name" title="Войти с помощью учетной записи @provider.DisplayName">
-                                    <i class="bi bi-google me-2"></i>@provider.DisplayName
+                                var icon = "bi bi-box-arrow-in-right";
+
+                                if (provider.Name == "Google")
+                                {
+                                    icon = "bi bi-google";
+                                }
+                                else if (provider.Name == "GitHub")
+                                {
+                                    icon = "bi bi-github";
+                                }
+                                else if (provider.Name == "Discord")
+                                {
+                                    icon = "bi bi-discord";
+                                }
+
+                                <button type="submit"
+                                        class="btn btn-outline-dark w-100 mb-2"
+                                        name="provider"
+                                        value="@provider.Name">
+
+                                    <i class="@icon me-2"></i>
+
+                                    Войти через @provider.DisplayName
+
                                 </button>
                             }
                         </div>

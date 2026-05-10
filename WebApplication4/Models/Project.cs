@@ -19,7 +19,7 @@ namespace WebApplication4.Models
         public string? ApplicationUserId { get; set; }
         public string? RepositoryUrl { get; set; }
         public string? DemoUrl { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public int ViewCount { get; set; } = 0;
 

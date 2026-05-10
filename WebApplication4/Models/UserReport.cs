@@ -18,7 +18,7 @@ namespace WebApplication4.Models
         public string Reason { get; set; } = string.Empty;
         public string? AdditionalComment { get; set; }
 
-        public DateTime ReportedAt { get; set; } = DateTime.Now;
+        public DateTime ReportedAt { get; set; } = DateTime.UtcNow;
         public bool IsResolved { get; set; }
         public string? AdminResponse { get; set; }
         public DateTime? ResolvedAt { get; set; }

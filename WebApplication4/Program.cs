@@ -7,16 +7,17 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using WebApplication4;
 using WebApplication4.Data;
-using WebApplication4.Filters;
-using WebApplication4.Middleware;
 using WebApplication4.Models;
 using WebApplication4.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// DATABASE
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// IDENTITY
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -24,24 +25,90 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequiredLength = 6;
+
     options.SignIn.RequireConfirmedEmail = false;
+
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-builder.Services.AddTransient<IEmailSender, EmailSender>();
-
+// ВАЖНО
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
     options.LogoutPath = "/Identity/Account/Logout";
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
+
     options.SlidingExpiration = true;
 });
 
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+// AUTHENTICATION
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme =
+            IdentityConstants.ApplicationScheme;
+
+        options.DefaultAuthenticateScheme =
+            IdentityConstants.ApplicationScheme;
+
+        options.DefaultChallengeScheme =
+            IdentityConstants.ApplicationScheme;
+    })
+
+    // GOOGLE
+    .AddGoogle(options =>
+    {
+        options.ClientId =
+            builder.Configuration["Authentication:Google:ClientId"];
+
+        options.ClientSecret =
+            builder.Configuration["Authentication:Google:ClientSecret"];
+
+        options.CallbackPath = "/signin-google";
+    })
+
+    // GITHUB
+    .AddGitHub(options =>
+    {
+        options.ClientId =
+            builder.Configuration["Authentication:GitHub:ClientId"];
+
+        options.ClientSecret =
+            builder.Configuration["Authentication:GitHub:ClientSecret"];
+
+        options.CallbackPath = "/signin-github";
+
+        options.Scope.Add("user:email");
+    })
+
+    // DISCORD
+    .AddDiscord(options =>
+    {
+        options.ClientId =
+            builder.Configuration["Authentication:Discord:ClientId"];
+
+        options.ClientSecret =
+            builder.Configuration["Authentication:Discord:ClientSecret"];
+
+        options.CallbackPath = "/signin-discord";
+
+        options.Scope.Add("identify");
+        options.Scope.Add("email");
+    });
+
+// EMAIL
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+// LOCALIZATION
+builder.Services.AddLocalization(options =>
+    options.ResourcesPath = "Resources");
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -50,20 +117,25 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
         new CultureInfo("ru-RU"),
         new CultureInfo("en-US")
     };
-    options.DefaultRequestCulture = new RequestCulture("ru-RU");
-    options.SupportedCultures = supportedCultures;
-    options.SupportedUICultures = supportedCultures;
-    options.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider());
+
+    options.DefaultRequestCulture =
+        new RequestCulture("ru-RU");
+
+    options.SupportedCultures =
+        supportedCultures;
+
+    options.SupportedUICultures =
+        supportedCultures;
+
+    options.RequestCultureProviders.Insert(
+        0,
+        new QueryStringRequestCultureProvider());
 });
 
 builder.Services.AddControllersWithViews()
-    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+    .AddViewLocalization(
+        LanguageViewLocationExpanderFormat.Suffix)
     .AddDataAnnotationsLocalization();
-// После builder.Services.AddControllersWithViews();
-//builder.Services.AddControllersWithViews(options =>
-////{
-////    options.Filters.Add<BannedUserFilter>();
-//});
 
 builder.Services.AddRazorPages();
 
@@ -74,36 +146,44 @@ app.UseRequestLocalization();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
+
 app.UseRouting();
+
+// ВАЖНО
 app.UseAuthentication();
+
 app.UseAuthorization();
-//app.UseBannedUserMiddleware();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 
+// AUTO MIGRATIONS
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+
     try
     {
-        var context = services.GetRequiredService<AppDbContext>();
-        if (context.Database.GetPendingMigrations().Any())
-        {
-            await context.Database.MigrateAsync();
-        }
+        var context =
+            services.GetRequiredService<AppDbContext>();
+
+        await context.Database.MigrateAsync();
+
         await DbInitializer.Initialize(services);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Ошибка БД: {ex.Message}");
+        Console.WriteLine(ex.Message);
     }
 }
 

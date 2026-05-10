@@ -18,7 +18,7 @@ namespace WebApplication4.Models
         [ForeignKey("User2Id")]
         public ApplicationUser User2 { get; set; } = null!;
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastMessageAt { get; set; }
 
         public ICollection<Message> Messages { get; set; } = new List<Message>();

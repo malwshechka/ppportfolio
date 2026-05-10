@@ -20,7 +20,7 @@ namespace WebApplication4.Models
         public string Text { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsRead { get; set; }
         public bool IsDeleted { get; set; }

@@ -1,0 +1,76 @@
+﻿@model List<WebApplication4.Controllers.SubscriptionViewModel>
+
+@{
+    ViewData["Title"] = "Подписчики";
+}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Подписчики</h2>
+
+        <a asp-action="Index"
+           class="btn btn-outline-secondary">
+            Назад в профиль
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-light border">
+            У вас пока нет подписчиков
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+
+            @foreach (var user in Model)
+            {
+                <div class="col-md-4">
+
+                    <div class="card border-0 shadow-sm h-100">
+
+                        <div class="card-body text-center">
+
+                            @if (!string.IsNullOrEmpty(user.ProfilePhotoUrl))
+                            {
+                                <img src="@user.ProfilePhotoUrl"
+                                     class="rounded-circle mb-3"
+                                     width="90"
+                                     height="90"
+                                     style="object-fit:cover;">
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-secondary mx-auto mb-3 d-flex align-items-center justify-content-center text-white fw-bold"
+                                     style="width:90px; height:90px; font-size:2rem;">
+                                    @user.DisplayName.Substring(0, 1).ToUpper()
+                                </div>
+                            }
+
+                            <h5 class="fw-bold">
+                                @user.DisplayName
+                            </h5>
+
+                            <p class="text-muted small mb-3">
+                                Подписан с
+                                @user.SubscribedAt.ToString("dd.MM.yyyy")
+                            </p>
+
+                            <a asp-action="UserPortfolio"
+                               asp-route-userId="@user.UserId"
+                               class="btn btn-primary btn-sm">
+                                Открыть профиль
+                            </a>
+
+                        </div>
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>

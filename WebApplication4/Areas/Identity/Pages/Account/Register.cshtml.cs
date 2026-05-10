@@ -67,7 +67,10 @@ namespace WebApplication4.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl ?? Url.Content("~/");
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            ExternalLogins = (await _signInManager
+                .GetExternalAuthenticationSchemesAsync())
+                .ToList();
 
             if (ModelState.IsValid)
             {
@@ -76,21 +79,31 @@ namespace WebApplication4.Areas.Identity.Pages.Account
                     UserName = Input.Email,
                     Email = Input.Email,
                     DisplayName = Input.DisplayName,
-                    RegisteredAt = DateTime.Now,
+                    RegisteredAt = DateTime.UtcNow,
                     AllowPrivateMessages = true
                 };
 
-                var result = await _userManager.CreateAsync(user, Input.Password);
-                if (result.Succeeded)
+                try
                 {
-                    _logger.LogInformation("User created a new account with password.");
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
-                }
+                    var result = await _userManager.CreateAsync(user, Input.Password);
 
-                foreach (var error in result.Errors)
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation("User created a new account with password.");
+
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+
+                        return LocalRedirect(returnUrl);
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError(string.Empty, ex.ToString());
                 }
             }
 

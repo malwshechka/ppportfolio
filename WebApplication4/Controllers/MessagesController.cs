@@ -242,7 +242,7 @@ namespace WebApplication4.Controllers
             var exists = await _context.UserBlocks.AnyAsync(b => b.BlockerId == blockerId && b.BlockedUserId == userId);
             if (!exists)
             {
-                _context.UserBlocks.Add(new UserBlock { BlockerId = blockerId, BlockedUserId = userId, BlockedAt = DateTime.Now });
+                _context.UserBlocks.Add(new UserBlock { BlockerId = blockerId, BlockedUserId = userId, BlockedAt = DateTime.UtcNow });
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -293,7 +293,7 @@ namespace WebApplication4.Controllers
             {
                 Name = name.Trim(),
                 CreatedById = userId,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
             _context.GroupChats.Add(group);
             await _context.SaveChangesAsync();
@@ -304,7 +304,7 @@ namespace WebApplication4.Controllers
                 GroupChatId = group.Id,
                 UserId = userId,
                 IsAdmin = true,
-                JoinedAt = DateTime.Now,
+                JoinedAt = DateTime.UtcNow,
                 Left = false
             });
 
@@ -324,7 +324,7 @@ namespace WebApplication4.Controllers
                             GroupChatId = group.Id,
                             UserId = targetUser.Id,
                             IsAdmin = false,
-                            JoinedAt = DateTime.Now,
+                            JoinedAt = DateTime.UtcNow,
                             Left = false
                         });
                         addedCount++;
@@ -469,7 +469,7 @@ namespace WebApplication4.Controllers
             {
                 var group = await _context.GroupChats.Include(g => g.Members).FirstOrDefaultAsync(g => g.Id == conversationId && g.Members.Any(m => m.UserId == userId && !m.Left));
                 if (group == null) return NotFound();
-                var message = new GroupMessage { GroupChatId = conversationId, SenderId = userId!, Text = text?.Trim() ?? "", CreatedAt = DateTime.Now, IsRead = false };
+                var message = new GroupMessage { GroupChatId = conversationId, SenderId = userId!, Text = text?.Trim() ?? "", CreatedAt = DateTime.UtcNow, IsRead = false };
                 if (image != null && image.Length > 0)
                 {
                     var dir = Path.Combine(_environment.WebRootPath, "uploads", "chat");
@@ -492,7 +492,7 @@ namespace WebApplication4.Controllers
                 if (isBlocked) { TempData["Error"] = "Вы не можете писать этому пользователю (заблокирован)"; return RedirectToAction("Chat", new { id = conversationId }); }
                 var otherUser = await _userManager.FindByIdAsync(otherUserId);
                 if (otherUser != null && !otherUser.AllowPrivateMessages) { TempData["Error"] = "Этот пользователь запретил получать личные сообщения"; return RedirectToAction("Chat", new { id = conversationId }); }
-                var message = new Message { ConversationId = conversationId, SenderId = userId!, Text = text?.Trim() ?? "", CreatedAt = DateTime.Now, IsRead = false };
+                var message = new Message { ConversationId = conversationId, SenderId = userId!, Text = text?.Trim() ?? "", CreatedAt = DateTime.UtcNow, IsRead = false };
                 if (image != null && image.Length > 0)
                 {
                     var dir = Path.Combine(_environment.WebRootPath, "uploads", "chat");
@@ -503,7 +503,7 @@ namespace WebApplication4.Controllers
                     message.ImageUrl = $"/uploads/chat/{fn}";
                 }
                 _context.Messages.Add(message);
-                conversation.LastMessageAt = DateTime.Now;
+                conversation.LastMessageAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Chat", new { id = conversationId });
             }
@@ -524,7 +524,7 @@ namespace WebApplication4.Controllers
             if (targetUser != null && !targetUser.AllowPrivateMessages) { TempData["Error"] = "Этот пользователь запретил получать личные сообщения"; return RedirectToAction(nameof(Index)); }
             var existing = await _context.Conversations.FirstOrDefaultAsync(c => (c.User1Id == currentUserId && c.User2Id == userId) || (c.User1Id == userId && c.User2Id == currentUserId));
             if (existing != null) return RedirectToAction("Chat", new { id = existing.Id });
-            var conv = new Conversation { User1Id = currentUserId, User2Id = userId, LastMessageAt = DateTime.Now };
+            var conv = new Conversation { User1Id = currentUserId, User2Id = userId, LastMessageAt = DateTime.UtcNow };
             _context.Conversations.Add(conv);
             await _context.SaveChangesAsync();
             return RedirectToAction("Chat", new { id = conv.Id });

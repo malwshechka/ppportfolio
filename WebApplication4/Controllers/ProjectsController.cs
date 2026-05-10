@@ -181,7 +181,7 @@ namespace WebApplication4.Controllers
             {
                 existingReview.Text = model.Text.Trim();
                 existingReview.Rating = model.Rating;
-                existingReview.Date = DateTime.Now;
+                existingReview.Date = DateTime.UtcNow;
                 _context.Reviews.Update(existingReview);
             }
             else
@@ -190,7 +190,7 @@ namespace WebApplication4.Controllers
                 {
                     Text = model.Text.Trim(),
                     Rating = model.Rating,
-                    Date = DateTime.Now,
+                    Date = DateTime.UtcNow,
                     UserId = userId,
                     ProjectId = projectId
                 };

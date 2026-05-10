@@ -14,6 +14,6 @@ namespace WebApplication4.Models
         [ForeignKey("FollowedUserId")]
         public ApplicationUser FollowedUser { get; set; } = null!;
 
-        public DateTime SubscribedAt { get; set; } = DateTime.Now;
+        public DateTime SubscribedAt { get; set; } = DateTime.UtcNow;
     }
 }

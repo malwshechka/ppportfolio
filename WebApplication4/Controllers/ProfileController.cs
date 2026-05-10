@@ -70,6 +70,16 @@ namespace WebApplication4.Controllers
                     .AverageAsync(r => (double?)r.Rating) ?? 0
                 : 0;
 
+
+            model.SubscribersCount = await _context.UserSubscriptions
+    .CountAsync(s => s.FollowedUserId == user.Id);
+
+            ViewBag.SubscriptionsCount = await _context.UserSubscriptions
+                .CountAsync(s => s.SubscriberId == user.Id);
+
+            ViewBag.SubscribersCount = await _context.UserSubscriptions
+                .CountAsync(s => s.FollowedUserId == user.Id);
+
             return View(model);
         }
 
@@ -264,7 +274,7 @@ namespace WebApplication4.Controllers
                 RepositoryUrl = model.RepositoryUrl,
                 DemoUrl = model.DemoUrl,
                 ApplicationUserId = userId,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 ModerationStatus = ModerationStatus.Pending
             };
             _context.Projects.Add(project);
@@ -340,7 +350,7 @@ namespace WebApplication4.Controllers
             project.ComplexityLevelId = model.ComplexityLevelId;
             project.RepositoryUrl = model.RepositoryUrl;
             project.DemoUrl = model.DemoUrl;
-            project.UpdatedAt = DateTime.Now;
+            project.UpdatedAt = DateTime.UtcNow;
 
             if (project.ModerationStatus is ModerationStatus.Rejected or ModerationStatus.Approved)
             {
@@ -440,7 +450,7 @@ namespace WebApplication4.Controllers
                 {
                     SubscriberId = currentUserId,
                     FollowedUserId = userId,
-                    SubscribedAt = DateTime.Now
+                    SubscribedAt = DateTime.UtcNow
                 });
                 TempData["Success"] = "Вы подписались на пользователя";
             }
@@ -473,6 +483,40 @@ namespace WebApplication4.Controllers
                 }).ToListAsync();
 
             return View(subscriptions);
+        }
+
+        public async Task<IActionResult> Subscribers()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user?.IsBanned == true)
+                return RedirectToAction("Index", "Home", new { banned = 1 });
+
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+                return Challenge();
+
+            var blockedUserIds = await _context.UserBlocks
+                .Where(b => b.BlockerId == userId || b.BlockedUserId == userId)
+                .Select(b => b.BlockerId == userId ? b.BlockedUserId : b.BlockerId)
+                .ToListAsync();
+
+            var subscribers = await _context.UserSubscriptions
+                .Where(s => s.FollowedUserId == userId &&
+                            !blockedUserIds.Contains(s.SubscriberId))
+                .Include(s => s.Subscriber)
+                .OrderByDescending(s => s.SubscribedAt)
+                .Select(s => new SubscriptionViewModel
+                {
+                    UserId = s.Subscriber.Id,
+                    DisplayName = s.Subscriber.DisplayName ?? s.Subscriber.UserName,
+                    ProfilePhotoUrl = s.Subscriber.ProfilePhotoUrl,
+                    SubscribedAt = s.SubscribedAt
+                })
+                .ToListAsync();
+
+            return View(subscribers);
         }
 
         [HttpPost]
@@ -515,7 +559,7 @@ namespace WebApplication4.Controllers
                 Type = reportType,
                 Reason = type,
                 AdditionalComment = comment,
-                ReportedAt = DateTime.Now,
+                ReportedAt = DateTime.UtcNow,
                 IsResolved = false
             });
             await _context.SaveChangesAsync();

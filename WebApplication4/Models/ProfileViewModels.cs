@@ -36,6 +36,7 @@ namespace WebApplication4.Models
         // 🔹 ДОБАВЛЕНО: Разрешение личных сообщений
         [Display(Name = "Разрешить личные сообщения")]
         public bool AllowPrivateMessages { get; set; }
+        public int SubscribersCount { get; set; }
     }
 
     public class ChangePasswordViewModel

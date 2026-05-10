@@ -67,29 +67,43 @@ public static class DbInitializer
 
         await context.SaveChangesAsync();
 
-        // 2. Создание роли Admin, если её нет
-        if (!await roleManager.RoleExistsAsync("Admin"))
+        // ADMIN
+        var adminEmail = "admin@portfolio.com";
+        var adminPassword = "Admin123!";
+
+        // Ищем админа
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+        // Если есть — удаляем полностью
+        if (adminUser != null)
         {
-            await roleManager.CreateAsync(new IdentityRole("Admin"));
+            await userManager.DeleteAsync(adminUser);
         }
 
-        // 3. Создание пользователя-администратора, если его нет
-        var adminEmail = "admin@portfolio.com";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
+        // Создаем заново
+        adminUser = new ApplicationUser
         {
-            adminUser = new ApplicationUser
-            {
-                UserName = adminEmail,
-                Email = adminEmail,
-                EmailConfirmed = true
-            };
-            await userManager.CreateAsync(adminUser, "Admin123!");
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true,
+            DisplayName = "Administrator",
+            RegisteredAt = DateTime.UtcNow,
+            AllowPrivateMessages = true
+        };
+
+        var createResult =
+            await userManager.CreateAsync(adminUser, adminPassword);
+
+        if (createResult.Succeeded)
+        {
             await userManager.AddToRoleAsync(adminUser, "Admin");
         }
-        else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+        else
         {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
+            foreach (var error in createResult.Errors)
+            {
+                Console.WriteLine(error.Description);
+            }
         }
     }
 }

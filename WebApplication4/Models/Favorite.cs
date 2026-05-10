@@ -16,6 +16,6 @@ namespace WebApplication4.Models
         [ForeignKey("ProjectId")]
         public Project Project { get; set; } = null!;
 
-        public DateTime AddedAt { get; set; } = DateTime.Now;
+        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
     }
 }

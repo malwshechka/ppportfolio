@@ -129,7 +129,7 @@ namespace WebApplication4.Controllers
             if (project != null)
             {
                 project.ModerationStatus = ModerationStatus.Approved;
-                project.ModeratedAt = DateTime.Now;
+                project.ModeratedAt = DateTime.UtcNow;
                 project.ModeratedByUserId = _userManager.GetUserId(User);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = $"Проект \"{project.Title}\" опубликован!";
@@ -146,7 +146,7 @@ namespace WebApplication4.Controllers
             {
                 project.ModerationStatus = ModerationStatus.Rejected;
                 project.RejectionReason = reason;
-                project.ModeratedAt = DateTime.Now;
+                project.ModeratedAt = DateTime.UtcNow;
                 project.ModeratedByUserId = _userManager.GetUserId(User);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = $"Проект \"{project.Title}\" отклонён";
@@ -196,7 +196,7 @@ namespace WebApplication4.Controllers
 
             report.IsResolved = true;
             report.AdminResponse = response;
-            report.ResolvedAt = DateTime.Now;
+            report.ResolvedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Жалоба рассмотрена";
@@ -216,7 +216,7 @@ namespace WebApplication4.Controllers
 
             if (conv == null)
             {
-                conv = new Conversation { User1Id = adminId, User2Id = userId, LastMessageAt = DateTime.Now };
+                conv = new Conversation { User1Id = adminId, User2Id = userId, LastMessageAt = DateTime.UtcNow };
                 _context.Conversations.Add(conv);
                 await _context.SaveChangesAsync();
             }
@@ -226,7 +226,7 @@ namespace WebApplication4.Controllers
                 ConversationId = conv.Id,
                 SenderId = adminId,
                 Text = $"[ПРЕДУПРЕЖДЕНИЕ ОТ АДМИНИСТРАЦИИ] {message}",
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 IsRead = false
             });
             await _context.SaveChangesAsync();

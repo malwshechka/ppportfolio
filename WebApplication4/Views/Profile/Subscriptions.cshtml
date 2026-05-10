@@ -42,7 +42,7 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a asp-controller="Projects" asp-action="UserPortfolio" asp-route-userId="@sub.UserId" class="btn btn-sm btn-outline-primary">Профиль</a>
+                        <a asp-controller="Profile" asp-action="UserPortfolio" asp-route-userId="@sub.UserId" class="btn btn-sm btn-outline-primary">Профиль</a>
                         <form asp-controller="Profile" asp-action="ToggleSubscription" method="post">
                             <input type="hidden" name="userId" value="@sub.UserId" />
                             <button type="submit" class="btn btn-sm btn-outline-danger">Отписаться</button>

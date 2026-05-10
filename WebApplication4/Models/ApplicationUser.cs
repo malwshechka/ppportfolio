@@ -12,7 +12,7 @@ namespace WebApplication4.Models
         public string? GitHubUrl { get; set; }
         public string? LinkedInUrl { get; set; }
         public string? TelegramUrl { get; set; }
-        public DateTime? RegisteredAt { get; set; } = DateTime.Now;
+        public DateTime? RegisteredAt { get; set; } = DateTime.UtcNow;
         public string? ProfilePhotoUrl { get; set; }
 
         // Разрешение на сообщения
