@@ -1,11 +1,9 @@
-﻿```csharp
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Globalization;
 using WebApplication4;
 using WebApplication4.Data;
@@ -43,7 +41,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
 
     options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = SameSiteMode.Lax;
+
+    // ВАЖНО ДЛЯ OAUTH
+    options.Cookie.SameSite = SameSiteMode.None;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
@@ -51,15 +51,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-// FOR RENDER / REVERSE PROXY
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor |
-        ForwardedHeaders.XForwardedProto;
-});
-
-// AUTHENTICATION
+// AUTH
 builder.Services
     .AddAuthentication(options =>
     {
@@ -77,41 +69,47 @@ builder.Services
     .AddGoogle(options =>
     {
         options.ClientId =
-            builder.Configuration["Authentication:Google:ClientId"];
+            builder.Configuration["Authentication:Google:ClientId"]!;
 
         options.ClientSecret =
-            builder.Configuration["Authentication:Google:ClientSecret"];
+            builder.Configuration["Authentication:Google:ClientSecret"]!;
 
         options.CallbackPath = "/signin-google";
+
+        options.SaveTokens = true;
     })
 
     // GITHUB
     .AddGitHub(options =>
     {
         options.ClientId =
-            builder.Configuration["Authentication:GitHub:ClientId"];
+            builder.Configuration["Authentication:GitHub:ClientId"]!;
 
         options.ClientSecret =
-            builder.Configuration["Authentication:GitHub:ClientSecret"];
+            builder.Configuration["Authentication:GitHub:ClientSecret"]!;
 
         options.CallbackPath = "/signin-github";
 
         options.Scope.Add("user:email");
+
+        options.SaveTokens = true;
     })
 
     // DISCORD
     .AddDiscord(options =>
     {
         options.ClientId =
-            builder.Configuration["Authentication:Discord:ClientId"];
+            builder.Configuration["Authentication:Discord:ClientId"]!;
 
         options.ClientSecret =
-            builder.Configuration["Authentication:Discord:ClientSecret"];
+            builder.Configuration["Authentication:Discord:ClientSecret"]!;
 
         options.CallbackPath = "/signin-discord";
 
         options.Scope.Add("identify");
         options.Scope.Add("email");
+
+        options.SaveTokens = true;
     });
 
 // EMAIL
@@ -152,10 +150,8 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// LOCALIZATION
 app.UseRequestLocalization();
 
-// ERRORS
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -163,8 +159,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// FIX FOR RENDER
-app.UseForwardedHeaders();
+// ВАЖНО ДЛЯ RENDER
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders =
+        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
 
 app.UseHttpsRedirection();
 
@@ -172,12 +173,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// AUTH
 app.UseAuthentication();
 
 app.UseAuthorization();
 
-// ROUTES
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -205,4 +204,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-```
