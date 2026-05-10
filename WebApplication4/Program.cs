@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿```csharp
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
@@ -33,7 +35,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// ВАЖНО
+// COOKIE
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
@@ -42,10 +44,19 @@ builder.Services.ConfigureApplicationCookie(options =>
 
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
 
     options.SlidingExpiration = true;
+});
+
+// FOR RENDER / REVERSE PROXY
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
 });
 
 // AUTHENTICATION
@@ -141,8 +152,10 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
+// LOCALIZATION
 app.UseRequestLocalization();
 
+// ERRORS
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -150,17 +163,21 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// FIX FOR RENDER
+app.UseForwardedHeaders();
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// ВАЖНО
+// AUTH
 app.UseAuthentication();
 
 app.UseAuthorization();
 
+// ROUTES
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -188,3 +205,4 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+```
