@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using WebApplication4.Data;
 using WebApplication4.Models;
 
@@ -14,33 +13,39 @@ namespace WebApplication4.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-    public HomeController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        public HomeController(
+            AppDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
         }
 
+        // 🔹 Проверка бана
         private async Task<string?> GetBannedNoticeAsync()
         {
-            if (User.Identity?.IsAuthenticated != true) return null;
+            if (User.Identity?.IsAuthenticated != true)
+                return null;
 
             var userId = _userManager.GetUserId(User);
 
-            if (string.IsNullOrEmpty(userId)) return null;
+            if (string.IsNullOrEmpty(userId))
+                return null;
 
             var user = await _userManager.FindByIdAsync(userId);
 
             return user?.IsBanned == true
-                ? "⛔ Ваш аккаунт временно заблокирован администратором. Доступны только публичные просмотры, разделы «О нас» и «Конфиденциальность»."
+                ? "⛔ Ваш аккаунт временно заблокирован администратором."
                 : null;
         }
 
+        // 🔹 Главная
         public async Task<IActionResult> Index(
-            string search,
+            string? search,
             int? appTypeId,
             int? complexityId,
             int? statusId,
-            string sortBy)
+            string? sortBy)
         {
             ViewBag.BannedNotice = await GetBannedNoticeAsync();
 
@@ -48,7 +53,7 @@ namespace WebApplication4.Controllers
 
             var blockedUserIds = new List<string>();
 
-            if (currentUserId != null)
+            if (!string.IsNullOrEmpty(currentUserId))
             {
                 blockedUserIds = await _context.UserBlocks
                     .Where(b =>
@@ -61,82 +66,82 @@ namespace WebApplication4.Controllers
                     .ToListAsync();
             }
 
-            var projects = _context.Projects
-                .Include(p => p.ApplicationUser)
+            // 🔥 БЕЗ Include — чтобы не было timeout на Render/Supabase
+            IQueryable<Project> projectsQuery = _context.Projects
+                .AsNoTracking()
                 .Where(p =>
                     p.ModerationStatus == ModerationStatus.Approved &&
                     p.ApplicationUser != null &&
-                    !p.ApplicationUser.IsBanned)
-                .Include(p => p.AppType)
-                .Include(p => p.Status)
-                .Include(p => p.ComplexityLevel)
-                .Include(p => p.ProjectTechnologies!)
-                .ThenInclude(pt => pt!.Technology)
-                .Include(p => p.Reviews)
-                .Include(p => p.Images)
-                .Include(p => p.Favorites)
-                .AsQueryable();
+                    !p.ApplicationUser.IsBanned);
 
+            // 🔹 Блокировки
             if (blockedUserIds.Any())
             {
-                projects = projects.Where(p =>
-                    !blockedUserIds.Contains(p.ApplicationUserId!));
+                projectsQuery = projectsQuery
+                    .Where(p => !blockedUserIds.Contains(p.ApplicationUserId!));
             }
 
-            if (!string.IsNullOrEmpty(search))
+            // 🔹 Поиск
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                projects = projects.Where(p =>
+                projectsQuery = projectsQuery.Where(p =>
                     p.Title.Contains(search) ||
                     p.Description.Contains(search));
             }
 
+            // 🔹 Фильтры
             if (appTypeId.HasValue)
             {
-                projects = projects.Where(p =>
-                    p.AppTypeId == appTypeId.Value);
+                projectsQuery = projectsQuery
+                    .Where(p => p.AppTypeId == appTypeId.Value);
             }
 
             if (complexityId.HasValue)
             {
-                projects = projects.Where(p =>
-                    p.ComplexityLevelId == complexityId.Value);
+                projectsQuery = projectsQuery
+                    .Where(p => p.ComplexityLevelId == complexityId.Value);
             }
 
             if (statusId.HasValue)
             {
-                projects = projects.Where(p =>
-                    p.StatusId == statusId.Value);
+                projectsQuery = projectsQuery
+                    .Where(p => p.StatusId == statusId.Value);
             }
 
-            projects = sortBy switch
+            // 🔹 Сортировка
+            projectsQuery = sortBy switch
             {
-                "rating" => projects.OrderByDescending(p =>
-                    p.Reviews.Any()
-                        ? p.Reviews.Average(r => r.Rating)
-                        : 0),
+                "date" => projectsQuery.OrderByDescending(p => p.CreatedAt),
 
-                "popularity" => projects.OrderByDescending(p =>
-                    p.Reviews.Count),
+                "rating" => projectsQuery
+                    .OrderByDescending(p =>
+                        p.Reviews.Any()
+                            ? p.Reviews.Average(r => r.Rating)
+                            : 0),
 
-                "date" => projects.OrderByDescending(p =>
-                    p.CreatedAt),
+                "popularity" => projectsQuery
+                    .OrderByDescending(p => p.Reviews.Count),
 
-                _ => projects.OrderByDescending(p =>
-                    p.CreatedAt)
+                _ => projectsQuery.OrderByDescending(p => p.CreatedAt)
             };
 
-            var model = await projects
+            // 🔥 Только 12 записей
+            var model = await projectsQuery
                 .Take(12)
                 .ToListAsync();
 
-            ViewBag.AppTypes =
-                await _context.AppTypes.ToListAsync();
+            // 🔥 Загружаем отдельно
+            ViewBag.AppTypes = await _context.AppTypes
+                .AsNoTracking()
+                .ToListAsync();
 
-            ViewBag.ComplexityLevels =
-                await _context.ComplexityLevels.ToListAsync();
+            ViewBag.ComplexityLevels = await _context.ComplexityLevels
+                .AsNoTracking()
+                .ToListAsync();
 
-            ViewBag.Statuses =
-                await _context.Statuses.ToListAsync();
+            ViewBag.Statuses = await _context.Statuses
+                .AsNoTracking()
+                .ToListAsync();
 
             ViewBag.CurrentSearch = search;
             ViewBag.CurrentSort = sortBy;
@@ -144,20 +149,26 @@ namespace WebApplication4.Controllers
             return View(model);
         }
 
+        // 🔹 О нас
         public async Task<IActionResult> About()
         {
-            ViewBag.BannedNotice =
-                await GetBannedNoticeAsync();
-
+            ViewBag.BannedNotice = await GetBannedNoticeAsync();
             ViewData["Title"] = "О нас";
 
             return View();
         }
 
+        // 🔹 Privacy
+        public async Task<IActionResult> Privacy()
+        {
+            ViewBag.BannedNotice = await GetBannedNoticeAsync();
+
+            return View();
+        }
+
+        // 🔹 Смена языка
         [HttpPost]
-        public IActionResult SetLanguage(
-            string culture,
-            string returnUrl)
+        public IActionResult SetLanguage(string culture, string returnUrl)
         {
             Response.Cookies.Append(
                 CookieRequestCultureProvider.DefaultCookieName,
@@ -165,87 +176,64 @@ namespace WebApplication4.Controllers
                     new RequestCulture(culture)),
                 new CookieOptions
                 {
-                    Expires =
-                        DateTimeOffset.UtcNow.AddYears(1)
+                    Expires = DateTimeOffset.UtcNow.AddYears(1)
                 });
 
             return LocalRedirect(returnUrl);
         }
 
-        public async Task<IActionResult> Privacy()
-        {
-            ViewBag.BannedNotice =
-                await GetBannedNoticeAsync();
-
-            return View();
-        }
-
+        // 🔹 Лента
         [Authorize]
         public async Task<IActionResult> Feed()
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             if (user?.IsBanned == true)
             {
-                return RedirectToAction(
-                    "Index",
-                    new { banned = 1 });
+                return RedirectToAction("Index");
             }
 
-            var userId =
-                _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User);
 
-            if (userId == null)
+            if (string.IsNullOrEmpty(userId))
             {
                 return Challenge();
             }
 
-            var blockedUserIds =
-                await _context.UserBlocks
-                    .Where(b =>
-                        b.BlockerId == userId ||
-                        b.BlockedUserId == userId)
-                    .Select(b =>
-                        b.BlockerId == userId
-                            ? b.BlockedUserId
-                            : b.BlockerId)
-                    .ToListAsync();
+            var blockedUserIds = await _context.UserBlocks
+                .Where(b =>
+                    b.BlockerId == userId ||
+                    b.BlockedUserId == userId)
+                .Select(b =>
+                    b.BlockerId == userId
+                        ? b.BlockedUserId
+                        : b.BlockerId)
+                .ToListAsync();
 
-            var followedUserIds =
-                await _context.UserSubscriptions
-                    .Where(s =>
-                        s.SubscriberId == userId &&
-                        !blockedUserIds.Contains(
-                            s.FollowedUserId))
-                    .Select(s => s.FollowedUserId)
-                    .ToListAsync();
+            var followedUserIds = await _context.UserSubscriptions
+                .Where(s =>
+                    s.SubscriberId == userId &&
+                    !blockedUserIds.Contains(s.FollowedUserId))
+                .Select(s => s.FollowedUserId)
+                .ToListAsync();
 
             if (!followedUserIds.Any())
             {
                 TempData["Info"] =
-                    "Вы пока ни на кого не подписаны. Найдите интересных разработчиков!";
+                    "Вы пока ни на кого не подписаны.";
 
                 return RedirectToAction("Index");
             }
 
+            // 🔥 Без Include
             var projects = await _context.Projects
-                .Include(p => p.ApplicationUser)
+                .AsNoTracking()
                 .Where(p =>
-                    followedUserIds.Contains(
-                        p.ApplicationUserId!) &&
-                    !blockedUserIds.Contains(
-                        p.ApplicationUserId!) &&
-                    p.ModerationStatus ==
-                        ModerationStatus.Approved &&
+                    followedUserIds.Contains(p.ApplicationUserId!) &&
+                    !blockedUserIds.Contains(p.ApplicationUserId!) &&
+                    p.ModerationStatus == ModerationStatus.Approved &&
                     p.ApplicationUser != null &&
                     !p.ApplicationUser.IsBanned)
-                .Include(p => p.AppType)
-                .Include(p => p.Status)
-                .Include(p => p.ProjectTechnologies!)
-                .ThenInclude(pt => pt.Technology)
-                .Include(p => p.Images)
-                .Include(p => p.Reviews)
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(20)
                 .ToListAsync();
@@ -253,5 +241,4 @@ namespace WebApplication4.Controllers
             return View(projects);
         }
     }
-
 }

@@ -13,9 +13,11 @@ using WebApplication4.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // DATABASE
+       var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // IDENTITY
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
