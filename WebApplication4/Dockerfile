@@ -1,8 +1,7 @@
-# Этап запуска
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER app
 WORKDIR /app
-# Render будет обращаться к этому порту
+# Эта строка критически важна!
+ENV ASPNETCORE_URLS=http://+:10000
 EXPOSE 8080
 
 # Этап сборки
