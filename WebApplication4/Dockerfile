@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 # Эта строка критически важна!
 ENV ASPNETCORE_URLS=http://+:10000
-EXPOSE 8080
+EXPOSE 10000
 
 # Этап сборки
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
