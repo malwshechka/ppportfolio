@@ -149,6 +149,8 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.UseRequestLocalization();
 
