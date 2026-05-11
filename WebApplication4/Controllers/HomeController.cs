@@ -131,17 +131,29 @@ namespace WebApplication4.Controllers
                 .ToListAsync();
 
             // 🔥 Загружаем отдельно
-            ViewBag.AppTypes = await _context.AppTypes
-                .AsNoTracking()
-                .ToListAsync();
+    //        ViewBag.AppTypes = await _context.AppTypes
+    //  .Select(x => new
+    //  {
+    //      x.Id,
+    //      x.Name
+    //  })
+    //  .ToListAsync();
 
-            ViewBag.ComplexityLevels = await _context.ComplexityLevels
-                .AsNoTracking()
-                .ToListAsync();
+    //        ViewBag.ComplexityLevels = await _context.ComplexityLevels
+    //.Select(x => new
+    //{
+    //    x.Id,
+    //    x.Name
+    //})
+    //.ToListAsync();
 
-            ViewBag.Statuses = await _context.Statuses
-                .AsNoTracking()
-                .ToListAsync();
+    //        ViewBag.Statuses = await _context.Statuses
+    // .Select(x => new
+    // {
+    //     x.Id,
+    //     x.Name
+    // })
+    // .ToListAsync();
 
             ViewBag.CurrentSearch = search;
             ViewBag.CurrentSort = sortBy;

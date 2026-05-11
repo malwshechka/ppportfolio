@@ -17,7 +17,10 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, o =>
+    {
+        o.CommandTimeout(300);
+    }));
 
 // IDENTITY
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -197,7 +200,7 @@ using (var scope = app.Services.CreateScope())
 
         await context.Database.MigrateAsync();
 
-        await DbInitializer.Initialize(services);
+        //await DbInitializer.Initialize(services);
     }
     catch (Exception ex)
     {
