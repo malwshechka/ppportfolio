@@ -129,8 +129,8 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<AppDbContext>();
-        await context.Database.MigrateAsync();
+        //var context = services.GetRequiredService<AppDbContext>();
+        //await context.Database.MigrateAsync();
         Console.WriteLine("Миграции успешно выполнены.");
     }
     catch (Exception ex)
