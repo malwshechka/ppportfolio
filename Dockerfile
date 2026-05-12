@@ -7,14 +7,11 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Копируем файл проекта. Судя по твоему GitHub, он лежит в WebApplication4/WebApplication4.csproj
+# Исправленный путь: копируем из подпапки в папку сборки
 COPY ["WebApplication4/WebApplication4.csproj", "WebApplication4/"]
 RUN dotnet restore "WebApplication4/WebApplication4.csproj"
 
-# Копируем всё остальное
 COPY . .
-
-# Переходим в папку с проектом для сборки
 WORKDIR "/src/WebApplication4"
 RUN dotnet build "WebApplication4.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
@@ -25,5 +22,5 @@ RUN dotnet publish "WebApplication4.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-# ВАЖНО: Убедись, что название DLL совпадает с именем проекта
+# Убедись, что регистр букв совпадает!
 ENTRYPOINT ["dotnet", "WebApplication4.dll"]
