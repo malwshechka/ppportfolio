@@ -1,13 +1,14 @@
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
+# Открываем порт 10000
 EXPOSE 10000
-ENV ASPNETCORE_URLS=http://+:10000
+# Говорим .NET слушать именно 10000 (заменяем старую строку на эту)
+ENV ASPNETCORE_HTTP_PORTS=10000
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Исправленный путь: копируем из подпапки в папку сборки
 COPY ["WebApplication4/WebApplication4.csproj", "WebApplication4/"]
 RUN dotnet restore "WebApplication4/WebApplication4.csproj"
 
@@ -22,5 +23,4 @@ RUN dotnet publish "WebApplication4.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-# Убедись, что регистр букв совпадает!
 ENTRYPOINT ["dotnet", "WebApplication4.dll"]
